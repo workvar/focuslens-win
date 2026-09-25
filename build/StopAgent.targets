@@ -1,0 +1,14 @@
+<Project>
+  <!--
+    The tracking agent keeps running after the app closes on purpose, and it runs from the app's
+    bin folder. A running copy holds FocusLens.Core.dll and friends open, so the next build fails
+    with MSB3026 and MSB3027 ("file is locked by FocusLensAgent"). Stop it before the build starts.
+    Pass -p:FocusLensKeepAgent=true to skip this.
+  -->
+  <Target Name="StopRunningAgent" BeforeTargets="PrepareForBuild"
+          Condition="'$(OS)' == 'Windows_NT' And '$(FocusLensKeepAgent)' != 'true'">
+    <Exec Command="taskkill /F /T /IM FocusLensAgent.exe"
+          IgnoreExitCode="true" IgnoreStandardErrorWarningFormat="true"
+          StandardOutputImportance="low" StandardErrorImportance="low" />
+  </Target>
+</Project>

@@ -7,6 +7,7 @@ using FocusLens.App.ViewModels.Chat;
 using FocusLens.App.ViewModels.Dashboard;
 using FocusLens.App.ViewModels.Meetings;
 using FocusLens.App.ViewModels.Settings;
+using FocusLens.App.ViewModels.Status;
 using FocusLens.Core.Models;
 
 namespace FocusLens.App.ViewModels;
@@ -45,6 +46,7 @@ public sealed partial class MainViewModel : ObservableObject
     public ChatViewModel Chat { get; }
     public MeetingsViewModel Meetings { get; }
     public SettingsViewModel Settings { get; }
+    public StatusViewModel Status { get; }
     public MeetingBannerViewModel Banner { get; }
     public OnboardingViewModel Onboarding { get; }
     public ObservableCollection<Conversation> Conversations { get; } = new();
@@ -57,13 +59,15 @@ public sealed partial class MainViewModel : ObservableObject
         Chat = new ChatViewModel(services.Conversations, services.Query);
         Meetings = new MeetingsViewModel(services.Meetings, services.MeetingSummarizer, services.MeetingSession);
         Banner = new MeetingBannerViewModel(services.MeetingSession, services.MeetingDetection);
+        Status = new StatusViewModel(services.Health);
         Settings = new SettingsViewModel(
-            new GeneralSettingsViewModel(services.Settings, services.Agent, services.Auth,
-                () => ThemeManager.Apply(services.Settings.Appearance)),
+            new GeneralSettingsViewModel(services.Settings, services.Agent, services.Auth),
+            new AppearanceSettingsViewModel(services.Settings),
             new TrackingSettingsViewModel(),
             new PrivacySettingsViewModel(),
             new AiSettingsViewModel(services.Ai, services.Secrets, services.AiClient),
-            new MeetingSettingsViewModel(services.Ai));
+            new MeetingSettingsViewModel(services.Ai),
+            Status);
         Onboarding = new OnboardingViewModel(services, CompleteOnboarding);
 
         IsOnboarding = !services.Settings.OnboardingCompleted;
@@ -71,7 +75,11 @@ public sealed partial class MainViewModel : ObservableObject
         _currentPage = Dashboard;
 
         services.Conversations.Changed += () => UiThread.Post(() => _ = ReloadConversationsAsync());
-        _statusTimer.Tick += (_, _) => RefreshStatus();
+        _statusTimer.Tick += (_, _) =>
+        {
+            RefreshStatus();
+            _ = Status.RefreshAsync();
+        };
         _statusTimer.Start();
         RefreshStatus();
     }
@@ -81,6 +89,7 @@ public sealed partial class MainViewModel : ObservableObject
         await ReloadConversationsAsync();
         await Meetings.RefreshAsync();
         await Dashboard.LoadAsync();
+        _ = Status.RefreshAsync(force: true); // Chroma starts Python, so never make startup wait for it
     }
 
     private void CompleteOnboarding()

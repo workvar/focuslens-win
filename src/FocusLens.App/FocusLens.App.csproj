@@ -41,4 +41,5 @@
     </ItemGroup>
     <Copy SourceFiles="@(AgentFiles)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
   </Target>
+  <Import Project="$(MSBuildThisFileDirectory)..\..\build\StopAgent.targets" />
 </Project>

@@ -17,4 +17,5 @@
     <ProjectReference Include="..\FocusLens.Core\FocusLens.Core.csproj" />
     <ProjectReference Include="..\FocusLens.Platform.Windows\FocusLens.Platform.Windows.csproj" />
   </ItemGroup>
+  <Import Project="$(MSBuildThisFileDirectory)..\..\build\StopAgent.targets" />
 </Project>

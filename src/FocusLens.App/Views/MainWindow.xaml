@@ -63,12 +63,25 @@
                                    Visibility="{Binding IsSidebarCollapsed, Converter={StaticResource InvertedBoolToVisibility}}" />
                     </StackPanel>
 
-                    <!-- Bottom status -->
+                    <!-- Bottom: theme switch, service status, pause -->
                     <StackPanel DockPanel.Dock="Bottom" Margin="0,8,0,0">
-                        <Border Style="{StaticResource Card}" Padding="10"
+                        <Button Style="{StaticResource NavButton}" Command="{Binding Settings.Appearance.ToggleLightDarkCommand}"
+                                ToolTip="{Binding Settings.Appearance.ToggleLabel}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding Settings.Appearance.ToggleGlyph}" FontFamily="Segoe MDL2 Assets" Width="24" />
+                                <TextBlock Text="{Binding Settings.Appearance.ToggleLabel}" Margin="8,0,0,0"
+                                           Visibility="{Binding DataContext.IsSidebarCollapsed, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource InvertedBoolToVisibility}}" />
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Collapsed sidebar: one dot per service, details in tooltips. -->
+                        <ItemsControl ItemsSource="{Binding Status.Items}" ItemTemplate="{StaticResource StatusDotOnly}" Margin="0,8,0,0"
+                                      Visibility="{Binding IsSidebarCollapsed, Converter={StaticResource BoolToVisibility}}" />
+
+                        <Border Style="{StaticResource Card}" Padding="10" Margin="0,8,0,0"
                                 Visibility="{Binding IsSidebarCollapsed, Converter={StaticResource InvertedBoolToVisibility}}">
                             <StackPanel>
-                                <TextBlock Text="{Binding AgentStatusText}" FontWeight="SemiBold" />
+                                <ItemsControl ItemsSource="{Binding Status.Items}" ItemTemplate="{StaticResource StatusRowCompact}" />
                                 <Button Content="{Binding IsPaused, Converter={StaticResource PauseLabel}}" Margin="0,8,0,0"
                                         Command="{Binding TogglePauseCommand}" />
                             </StackPanel>

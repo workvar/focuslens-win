@@ -13,6 +13,9 @@
             <TabItem Header="General">
                 <views:GeneralSettingsPanel DataContext="{Binding General}" />
             </TabItem>
+            <TabItem Header="Appearance">
+                <views:AppearanceSettingsPanel DataContext="{Binding Appearance}" />
+            </TabItem>
             <TabItem Header="Data collection">
                 <views:TrackingSettingsPanel DataContext="{Binding Tracking}" />
             </TabItem>
@@ -24,6 +27,9 @@
             </TabItem>
             <TabItem Header="Meetings">
                 <views:MeetingSettingsPanel DataContext="{Binding Meetings}" />
+            </TabItem>
+            <TabItem Header="Status">
+                <views:StatusSettingsPanel DataContext="{Binding Status}" />
             </TabItem>
         </TabControl>
     </Grid>

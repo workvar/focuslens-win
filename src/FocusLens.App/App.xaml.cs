@@ -38,10 +38,11 @@ public partial class App : Application
         };
 
         _services = new AppServices(meetingId => Dispatcher.Invoke(() => OpenMeeting(meetingId)));
-        ThemeManager.Apply(_services.Settings.Appearance);
+        ThemeManager.Apply(_services.Settings);
 
         _main = new MainViewModel(_services);
         _window = new MainWindow { DataContext = _main };
+        ThemeManager.Attach(_window);
         _window.StateChanged += (_, _) => { if (_window.WindowState == WindowState.Minimized) _window.Hide(); };
         _window.Closing += (_, args) =>
         {

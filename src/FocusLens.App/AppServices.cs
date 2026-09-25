@@ -3,6 +3,7 @@ using FocusLens.App.Services.Auth;
 using FocusLens.Core.Ai;
 using FocusLens.Core.Ai.Chat;
 using FocusLens.Core.Data;
+using FocusLens.Core.Health;
 using FocusLens.Core.Logging;
 using FocusLens.Core.Meetings;
 using FocusLens.Core.Paths;
@@ -29,6 +30,7 @@ public sealed class AppServices : IDisposable
     public AiQueryService Query { get; }
 
     public AgentLauncher Agent { get; } = new();
+    public HealthMonitor Health { get; }
     public SupabaseAuthService Auth { get; }
     public TrayIconService Tray { get; }
     public UpdateService Updates { get; }
@@ -52,6 +54,14 @@ public sealed class AppServices : IDisposable
 
         AiClient = new StreamingAiClient(() => Ai.Resolve(Secrets));
         Query = new AiQueryService(Conversations, Activity, AiClient);
+
+        Health = new HealthMonitor(new IHealthProbe[]
+        {
+            new AgentProbe(Agent),
+            new SqliteProbe(Db),
+            new ChromaProbe(),
+            new LlmProbe(() => Ai, Secrets),
+        });
 
         Auth = new SupabaseAuthService(Settings, Secrets);
         Tray = new TrayIconService();

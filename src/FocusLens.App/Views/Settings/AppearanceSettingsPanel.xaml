@@ -1,0 +1,37 @@
+<UserControl x:Class="FocusLens.App.Views.Settings.AppearanceSettingsPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel MaxWidth="640" HorizontalAlignment="Left">
+            <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                <StackPanel>
+                    <TextBlock Text="Theme" Style="{StaticResource Heading}" />
+                    <TextBlock Style="{StaticResource Muted}" Margin="0,6,0,0"
+                               Text="Choose how FocusLens looks. Match system follows your Windows light or dark setting." />
+                    <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                        <RadioButton GroupName="Theme" Content="Match system" IsChecked="{Binding IsSystem}" />
+                        <RadioButton GroupName="Theme" Content="Light" IsChecked="{Binding IsLight}" Margin="24,0,0,0" />
+                        <RadioButton GroupName="Theme" Content="Dark" IsChecked="{Binding IsDark}" Margin="24,0,0,0" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Text="Liquid glass" Style="{StaticResource Heading}" />
+                    <TextBlock Text="{Binding GlassNote}" Style="{StaticResource Muted}" Margin="0,6,0,0" />
+                    <CheckBox Content="Liquid glass effect" IsChecked="{Binding LiquidGlass}" IsEnabled="{Binding GlassSupported}" Margin="0,14,0,0" />
+
+                    <StackPanel Margin="0,14,0,0" IsEnabled="{Binding GlassAvailable}">
+                        <Grid>
+                            <TextBlock Text="Transparency" Style="{StaticResource Muted}" />
+                            <TextBlock Text="{Binding GlassPercent}" Style="{StaticResource Muted}" HorizontalAlignment="Right" />
+                        </Grid>
+                        <Slider Value="{Binding GlassTransparency}" Minimum="0" Maximum="1" SmallChange="0.05" LargeChange="0.1"
+                                TickFrequency="0.05" IsSnapToTickEnabled="True" Margin="0,8,0,0" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

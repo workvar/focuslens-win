@@ -69,7 +69,10 @@ jobs:
         run: |
           $files = Get-ChildItem Releases -File | ForEach-Object { $_.FullName }
           $ghArgs = @("release", "create", "v$env:VERSION") + $files + @(
-            "--title", "FocusLens v$env:VERSION", "--generate-notes", "--target", $env:GITHUB_SHA)
+            "--title", "FocusLens v$env:VERSION", "--target", $env:GITHUB_SHA)
+          # Prefer the hand-written notes for this phase; pre-release tags (1.0.0-beta.1) reuse the base version's notes.
+          $notes = "docs/release-notes/v$($env:VERSION.Split('-')[0]).md"
+          if (Test-Path $notes) { $ghArgs += @("--notes-file", $notes) } else { $ghArgs += "--generate-notes" }
           if ($env:VERSION -match '-') { $ghArgs += "--prerelease" }
           gh @ghArgs
           if ($LASTEXITCODE -ne 0) { throw "gh release create failed" }

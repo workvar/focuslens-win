@@ -27,6 +27,8 @@ public static class AppPaths
     public static string SharedStateFile => Path.Combine(Root, "shared-state.json");
     public static string AiSettingsFile => Path.Combine(Root, "ai-settings.json");
     public static string AppSettingsFile => Path.Combine(Root, "app-settings.json");
+    /// <summary>Persistent ChromaDB folder. Not created here: its absence means "no index yet".</summary>
+    public static string ChromaDir => Path.Combine(Root, "chroma");
     public static string LogsDir => Ensure(Path.Combine(Root, "logs"));
     public static string MeetingsDir => Ensure(Path.Combine(Root, "meetings"));
 

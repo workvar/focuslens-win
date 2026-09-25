@@ -20,6 +20,8 @@
                 <ResourceDictionary Source="Themes/Inputs.xaml" />
                 <ResourceDictionary Source="Themes/Toggles.xaml" />
                 <ResourceDictionary Source="Themes/Lists.xaml" />
+                <ResourceDictionary Source="Themes/Sliders.xaml" />
+                <ResourceDictionary Source="Themes/Status.xaml" />
             </ResourceDictionary.MergedDictionaries>
 
             <conv:BoolToVisibilityConverter x:Key="BoolToVisibility" />
