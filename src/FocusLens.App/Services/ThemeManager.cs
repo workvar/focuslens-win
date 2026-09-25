@@ -55,6 +55,7 @@ public static class ThemeManager
         var resources = Application.Current.Resources;
         SwapPalette(resources.MergedDictionaries, IsDark);
         GlassPalette.Apply(resources, IsGlassActive, settings.GlassTransparency);
+        BrushPalette.Apply(resources);
         if (_window is not null) WindowBackdrop.Apply(_window, IsDark, IsGlassActive);
 
         Changed?.Invoke();

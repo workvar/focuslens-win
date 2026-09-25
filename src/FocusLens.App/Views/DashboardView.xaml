@@ -13,12 +13,18 @@
                 <StackPanel>
                     <TextBlock Text="{Binding DateLabel}" Style="{StaticResource Title}" />
                     <TextBlock Text="{Binding FocusLabel}" Style="{StaticResource Muted}" />
+                    <TextBlock Text="{Binding UpdatedText}" Style="{StaticResource Muted}" FontSize="12" />
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                     <Button Content="&#xE76B;" FontFamily="Segoe MDL2 Assets" Command="{Binding PreviousDayCommand}" ToolTip="Previous day" />
                     <Button Content="Today" Command="{Binding GoToTodayCommand}" Margin="6,0" />
                     <Button Content="&#xE76C;" FontFamily="Segoe MDL2 Assets" Command="{Binding NextDayCommand}" ToolTip="Next day" />
-                    <Button Content="&#xE72C;" FontFamily="Segoe MDL2 Assets" Command="{Binding LoadCommand}" Margin="6,0,0,0" ToolTip="Refresh" />
+                    <Button Command="{Binding LoadCommand}" Style="{StaticResource PrimaryButton}" Margin="10,0,0,0" ToolTip="Reload today's activity">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource AccentTextBrush}" />
+                            <TextBlock Text="Refresh" Margin="8,0,0,0" Foreground="{DynamicResource AccentTextBrush}" />
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
             </Grid>
 

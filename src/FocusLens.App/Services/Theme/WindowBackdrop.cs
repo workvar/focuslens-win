@@ -26,7 +26,9 @@ public static class WindowBackdrop
         var margins = useGlass ? new DwmInterop.Margins { Left = -1, Right = -1, Top = -1, Bottom = -1 } : default;
         DwmInterop.DwmExtendFrameIntoClientArea(hwnd, ref margins);
 
+        // Flat mode paints the theme's window color, not the system one, so dark mode has no light flash.
+        var flat = Application.Current.TryFindResource("WindowColor") is Color themed ? themed : SystemColors.WindowColor;
         if (HwndSource.FromHwnd(hwnd)?.CompositionTarget is { } target)
-            target.BackgroundColor = useGlass ? Colors.Transparent : SystemColors.WindowColor;
+            target.BackgroundColor = useGlass ? Colors.Transparent : flat;
     }
 }

@@ -18,6 +18,7 @@ public sealed partial class DashboardViewModel : ObservableObject
     [ObservableProperty] private bool _isLoading;
     [ObservableProperty] private string? _errorMessage;
     [ObservableProperty] private bool _hasData;
+    [ObservableProperty] private string _updatedText = "";
 
     [ObservableProperty] private string _focusScoreText = "0";
     [ObservableProperty] private string _focusLabel = "No data";
@@ -72,6 +73,7 @@ public sealed partial class DashboardViewModel : ObservableObject
             Apply(summary, previous);
             ApplyHours(hourly);
             ApplyTrend(trend);
+            UpdatedText = $"Updated {DateTime.Now:HH:mm:ss}";
         }
         catch (Exception ex)
         {
@@ -82,6 +84,9 @@ public sealed partial class DashboardViewModel : ObservableObject
             IsLoading = false;
         }
     }
+
+    /// <summary>Timer entry point: keeps today's numbers current without stacking loads or touching past days.</summary>
+    public Task RefreshIfLiveAsync() => IsToday && !IsLoading ? LoadAsync() : Task.CompletedTask;
 
     private void Apply(DailySummary? summary, DailySummary? previous)
     {
