@@ -20,7 +20,7 @@ public static class ChartProbes
 
         var prompt = $$"""
             Decide whether a small chart would help visualise the assistant's answer. If yes, return ONLY JSON of the form:
-              {"type":"bar|line|pie","points":[{"id":"x","label":"...","value":123.0,"color":"#1A56A0"}]}
+              {"type":"bar|line|pie","points":[{"id":"x","label":"...","value":123.0,"color":"#1A5D38"}]}
             If no, return exactly the string: NONE
 
             Chart-type rules:

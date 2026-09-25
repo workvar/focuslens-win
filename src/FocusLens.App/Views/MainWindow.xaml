@@ -5,18 +5,20 @@
         xmlns:views="clr-namespace:FocusLens.App.Views"
         Title="FocusLens" Width="1180" Height="780" MinWidth="900" MinHeight="600"
         Background="{DynamicResource WindowBrush}" WindowStartupLocation="CenterScreen"
-        FontFamily="Segoe UI Variable Text, Segoe UI">
+        FontFamily="{StaticResource BodyFont}">
     <Window.Resources>
         <Style x:Key="NavButton" TargetType="Button">
             <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="Padding" Value="12,9" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
             <Setter Property="HorizontalContentAlignment" Value="Left" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Root" Background="{TemplateBinding Background}" CornerRadius="8" Padding="{TemplateBinding Padding}">
+                        <Border x:Name="Root" Background="{TemplateBinding Background}" CornerRadius="{DynamicResource RowRadius}" Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
                         </Border>
                         <ControlTemplate.Triggers>
@@ -24,7 +26,7 @@
                                 <Setter TargetName="Root" Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
                             </Trigger>
                             <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource Self}}" Value="True">
-                                <Setter TargetName="Root" Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
+                                <Setter TargetName="Root" Property="Background" Value="{DynamicResource AccentSoftBrush}" />
                             </DataTrigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -57,7 +59,7 @@
                     <StackPanel DockPanel.Dock="Top" Margin="0,4,0,12" Orientation="Horizontal">
                         <Button Content="&#xE700;" FontFamily="Segoe MDL2 Assets" Command="{Binding ToggleSidebarCommand}"
                                 Style="{StaticResource NavButton}" ToolTip="Collapse or expand" Width="40" />
-                        <TextBlock Text="FocusLens" Style="{StaticResource Heading}" VerticalAlignment="Center" Margin="8,0,0,0"
+                        <TextBlock Text="FocusLens" Style="{StaticResource Wordmark}" VerticalAlignment="Center" Margin="8,0,0,0"
                                    Visibility="{Binding IsSidebarCollapsed, Converter={StaticResource InvertedBoolToVisibility}}" />
                     </StackPanel>
 

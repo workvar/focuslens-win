@@ -31,6 +31,7 @@ public sealed class AppServices : IDisposable
     public AgentLauncher Agent { get; } = new();
     public SupabaseAuthService Auth { get; }
     public TrayIconService Tray { get; }
+    public UpdateService Updates { get; }
 
     public MeetingSessionCoordinator MeetingSession { get; }
     public MeetingPipeline MeetingPipeline { get; }
@@ -54,6 +55,7 @@ public sealed class AppServices : IDisposable
 
         Auth = new SupabaseAuthService(Settings, Secrets);
         Tray = new TrayIconService();
+        Updates = new UpdateService((message, ex) => Log.Error(message, ex));
 
         MeetingSummarizer = new MeetingSummarizer(AiClient, Meetings, () => Ai.AllowCloudMeetingSummary);
         var summarizer = MeetingSummarizer;
@@ -75,6 +77,7 @@ public sealed class AppServices : IDisposable
     public void Dispose()
     {
         MeetingDetection.Dispose();
+        Updates.Dispose();
         Tray.Dispose();
     }
 }

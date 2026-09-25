@@ -44,7 +44,7 @@
                     <Border Style="{StaticResource Card}" Margin="0,0,12,0">
                         <StackPanel>
                             <TextBlock Text="Focus score" Style="{StaticResource Muted}" />
-                            <TextBlock Text="{Binding FocusScoreText}" FontSize="52" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" />
+                            <TextBlock Text="{Binding FocusScoreText}" FontFamily="{StaticResource HeadingFont}" FontSize="56" FontWeight="Normal" Foreground="{DynamicResource AccentBrush}" />
                             <TextBlock Text="{Binding DeltaText}" Style="{StaticResource Muted}" />
                         </StackPanel>
                     </Border>
@@ -57,7 +57,7 @@
                                 <Border Style="{StaticResource Card}" Margin="0,0,12,0">
                                     <StackPanel>
                                         <TextBlock Text="{Binding Label}" Style="{StaticResource Muted}" />
-                                        <TextBlock Text="{Binding Value}" FontSize="28" FontWeight="SemiBold" Margin="0,4,0,0" />
+                                        <TextBlock Text="{Binding Value}" FontFamily="{StaticResource HeadingFont}" FontSize="30" FontWeight="Normal" Margin="0,4,0,0" />
                                         <TextBlock Text="{Binding Detail}" Style="{StaticResource Muted}" FontSize="12" />
                                     </StackPanel>
                                 </Border>

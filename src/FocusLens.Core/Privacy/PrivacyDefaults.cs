@@ -11,7 +11,7 @@ public static class PrivacyDefaults
         Version = PrivacyConfig.CurrentVersion,
         Categories =
         {
-            Make("banking", "Banking & Finance", "banknote", "#0E8A7A", true,
+            Make("banking", "Banking & Finance", "banknote", "#2F7F7A", true,
                 apps: new string[0],
                 domains: new[]
                 {
@@ -23,7 +23,7 @@ public static class PrivacyDefaults
                 },
                 keywords: new[] { "online banking", "account balance", "routing number", "wire transfer" }),
 
-            Make("password-managers", "Password Managers", "key", "#1A56A0", true,
+            Make("password-managers", "Password Managers", "key", "#1A5D38", true,
                 apps: new[]
                 {
                     "1password.exe", "bitwarden.exe", "lastpass.exe", "enpass.exe",
@@ -32,7 +32,7 @@ public static class PrivacyDefaults
                 domains: new[] { "1password.com", "bitwarden.com", "lastpass.com", "dashlane.com" },
                 keywords: new[] { "master password", "seed phrase", "recovery code", "one-time passcode" }),
 
-            Make("health", "Health & Medical", "cross", "#DC2626", true,
+            Make("health", "Health & Medical", "cross", "#B5603F", true,
                 apps: new string[0],
                 domains: new[]
                 {
@@ -42,7 +42,7 @@ public static class PrivacyDefaults
                 },
                 keywords: new[] { "diagnosis", "prescription", "medical record", "lab results", "patient portal" }),
 
-            Make("crypto", "Crypto Wallets", "coins", "#D97706", true,
+            Make("crypto", "Crypto Wallets", "coins", "#8A9A3B", true,
                 apps: new[] { "exodus.exe", "ledger live.exe", "trezor suite.exe", "coinbase.exe" },
                 domains: new[]
                 {
@@ -51,7 +51,7 @@ public static class PrivacyDefaults
                 },
                 keywords: new[] { "seed phrase", "private key", "recovery phrase", "wallet address" }),
 
-            Make("adult", "Adult Content", "eye-off", "#7C3AED", true,
+            Make("adult", "Adult Content", "eye-off", "#C58A2B", true,
                 apps: new string[0],
                 domains: new[] { "pornhub.com", "onlyfans.com", "xvideos.com", "xhamster.com" },
                 keywords: new string[0]),
@@ -65,12 +65,12 @@ public static class PrivacyDefaults
                 },
                 keywords: new string[0]),
 
-            Make("messaging", "Messaging", "message", "#0EA5E9", false,
+            Make("messaging", "Messaging", "message", "#6B9E7F", false,
                 apps: new[] { "whatsapp.exe", "telegram.exe", "signal.exe", "messenger.exe" },
                 domains: new[] { "web.whatsapp.com", "web.telegram.org", "messenger.com" },
                 keywords: new string[0]),
 
-            Make("others", "Others", "more", "#9CA3AF", true,
+            Make("others", "Others", "more", "#A8A29E", true,
                 apps: new string[0], domains: new string[0], keywords: new string[0]),
         },
     };

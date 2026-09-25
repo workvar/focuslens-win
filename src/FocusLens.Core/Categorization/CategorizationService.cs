@@ -51,7 +51,7 @@ public sealed class CategorizationService
         Snapshot().CategoryIds.TryGetValue(CategoryName(appId, url), out var id) ? id : null;
 
     public string ColorHex(string categoryName) =>
-        Snapshot().CategoryColors.TryGetValue(categoryName, out var hex) ? hex : "#9CA3AF";
+        Snapshot().CategoryColors.TryGetValue(categoryName, out var hex) ? hex : "#A8A29E";
 
     public void Invalidate()
     {

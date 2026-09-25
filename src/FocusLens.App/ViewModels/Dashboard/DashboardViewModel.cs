@@ -138,7 +138,7 @@ public sealed partial class DashboardViewModel : ObservableObject
         TrendChart = trend.Count < 2
             ? null
             : new ChartPayload(ChartType.Line, trend
-                .Select(t => new ChartDataPoint(t.Date, DateTime.Parse(t.Date).ToString("ddd"), t.FocusScore, "#1A56A0")).ToList());
+                .Select(t => new ChartDataPoint(t.Date, DateTime.Parse(t.Date).ToString("ddd"), t.FocusScore, "#1A5D38")).ToList());
 
     private static string Format(int seconds) =>
         seconds >= 3600 ? $"{seconds / 3600}h {seconds % 3600 / 60}m" : $"{seconds / 60}m";

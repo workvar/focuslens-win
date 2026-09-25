@@ -9,7 +9,7 @@ public sealed class PrivacyCategory
     public string Id { get; set; } = "";
     public string Name { get; set; } = "";
     public string Icon { get; set; } = "";
-    public string ColorHex { get; set; } = "#9CA3AF";
+    public string ColorHex { get; set; } = "#A8A29E";
     public bool IsSystem { get; set; }
     public bool IsEnabled { get; set; }
     public List<string> AppIds { get; set; } = new();

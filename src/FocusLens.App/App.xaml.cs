@@ -53,6 +53,9 @@ public partial class App : Application
         _services.Tray.OpenRequested += ShowWindow;
         _services.Tray.PauseToggled += () => Dispatcher.Invoke(_main.TogglePause);
         _services.Tray.QuitRequested += () => Dispatcher.Invoke(Quit);
+        _services.Tray.UpdateRequested += () => _ = Dispatcher.InvokeAsync(HandleUpdateRequestAsync);
+        _services.Updates.UpdateReady += OnUpdateReady;
+        _services.Updates.Start();
 
         ListenForShowRequests();
         ShowWindow();
@@ -91,10 +94,38 @@ public partial class App : Application
         });
     }
 
+    private void OnUpdateReady(string version) => Dispatcher.Invoke(() =>
+    {
+        _services!.Tray.SetUpdateReady(version);
+        _services.Tray.Notify("Update ready", $"FocusLens {version} is ready. Click to restart and update.", () => _ = ApplyUpdateAsync());
+    });
+
+    private async Task HandleUpdateRequestAsync()
+    {
+        var updates = _services!.Updates;
+        if (!updates.IsInstalled)
+        {
+            _services.Tray.Notify("FocusLens", "Updates are only available in the installed app.");
+            return;
+        }
+
+        if (updates.ReadyVersion is not null) await ApplyUpdateAsync();
+        else if (!await updates.CheckAsync()) _services.Tray.Notify("FocusLens", "You are up to date.");
+    }
+
+    /// <summary>Stops the agent so its files are free, then lets Velopack swap versions and relaunch.</summary>
+    private async Task ApplyUpdateAsync()
+    {
+        _quitting = true;
+        await _services!.Agent.StopAsync();
+        _services.Updates.ApplyAndRestart();
+    }
+
     /// <summary>Quitting from the tray stops the UI only; the agent keeps tracking until stopped in Settings.</summary>
     private void Quit()
     {
         _quitting = true;
+        _services?.Updates.ApplyOnExit();
         _services?.Dispose();
         Shutdown();
     }

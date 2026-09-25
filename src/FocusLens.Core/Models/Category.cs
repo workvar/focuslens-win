@@ -4,7 +4,7 @@ public sealed class Category
 {
     public long? Id { get; set; }
     public string Name { get; set; } = "";
-    public string ColorHex { get; set; } = "#9CA3AF";
+    public string ColorHex { get; set; } = "#A8A29E";
     public bool IsSystem { get; set; }
     public DateTime CreatedAt { get; set; }
 }

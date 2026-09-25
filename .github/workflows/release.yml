@@ -1,0 +1,75 @@
+name: Release
+
+# Push a tag like v1.2.3, or run the workflow manually with a version. Builds the app and the
+# agent into one Velopack installer and publishes it (plus the update feed) to GitHub Releases.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release, for example 1.2.3 (the tag v1.2.3 is created)"
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  # Keep in step with the Velopack package version in FocusLens.App.csproj.
+  VPK_VERSION: "1.2.158"
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Resolve version
+        env:
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          $raw = if ($env:INPUT_VERSION) { $env:INPUT_VERSION } else { $env:REF_NAME }
+          $version = $raw.TrimStart("v")
+          if ($version -notmatch '^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$') { throw "Not a semantic version: $version" }
+          "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Publish agent and app into one folder
+        run: pwsh scripts/publish.ps1 -SelfContained -Version $env:VERSION
+
+      - name: Install Velopack CLI
+        run: dotnet tool install --global vpk --version $env:VPK_VERSION
+
+      - name: Package installer and update feed
+        run: |
+          vpk pack `
+            --packId FocusLens `
+            --packTitle FocusLens `
+            --packVersion $env:VERSION `
+            --packDir dist `
+            --mainExe FocusLens.exe `
+            --icon src/FocusLens.App/Assets/focuslens.ico `
+            --outputDir Releases
+          if ($LASTEXITCODE -ne 0) { throw "vpk pack failed" }
+          # One installer for users: drop the portable zip.
+          Get-ChildItem Releases -Filter "*Portable*" | Remove-Item -Force
+          Get-ChildItem Releases | Format-Table Name, Length
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $files = Get-ChildItem Releases -File | ForEach-Object { $_.FullName }
+          $ghArgs = @("release", "create", "v$env:VERSION") + $files + @(
+            "--title", "FocusLens v$env:VERSION", "--generate-notes", "--target", $env:GITHUB_SHA)
+          if ($env:VERSION -match '-') { $ghArgs += "--prerelease" }
+          gh @ghArgs
+          if ($LASTEXITCODE -ne 0) { throw "gh release create failed" }

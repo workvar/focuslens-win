@@ -9,6 +9,7 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets\focuslens.ico</ApplicationIcon>
+    <StartupObject>FocusLens.App.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <Using Include="System.IO" />
@@ -22,6 +23,7 @@
     <ProjectReference Include="..\FocusLens.Core\FocusLens.Core.csproj" />
     <ProjectReference Include="..\FocusLens.Platform.Windows\FocusLens.Platform.Windows.csproj" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.*" />
+    <PackageReference Include="Velopack" Version="1.2.158" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Assets\focuslens.ico" />

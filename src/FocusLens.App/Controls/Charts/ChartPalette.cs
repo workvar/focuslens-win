@@ -10,7 +10,7 @@ internal static class ChartPalette
 {
     private static readonly string[] Fallback =
     {
-        "#1A56A0", "#0E8A7A", "#7C3AED", "#DC2626", "#D97706", "#64748B", "#0EA5E9", "#9CA3AF",
+        "#1A5D38", "#6B9E7F", "#8A9A3B", "#2F7F7A", "#C58A2B", "#B5603F", "#64748B", "#A8A29E",
     };
 
     public static Brush Color(string? hex, int index) =>

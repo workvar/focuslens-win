@@ -54,12 +54,12 @@ CREATE TABLE IF NOT EXISTS settings (
 );
 
 INSERT OR IGNORE INTO categories (name, color_hex, is_system) VALUES
-    ('Deep Work',     '#1A56A0', 1),
-    ('Communication', '#0E8A7A', 1),
-    ('Meetings',      '#7C3AED', 1),
-    ('Social Media',  '#DC2626', 1),
-    ('News',          '#D97706', 1),
+    ('Deep Work',     '#1A5D38', 1),
+    ('Communication', '#2F7F7A', 1),
+    ('Meetings',      '#C58A2B', 1),
+    ('Social Media',  '#B5603F', 1),
+    ('News',          '#8A9A3B', 1),
     ('Utilities',     '#64748B', 1),
-    ('Other',         '#9CA3AF', 1);
+    ('Other',         '#A8A29E', 1);
 ";
 }
