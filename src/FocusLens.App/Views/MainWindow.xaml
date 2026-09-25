@@ -46,6 +46,64 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
+
+        <Style x:Key="PinButton" TargetType="Button" BasedOn="{StaticResource IconButton}">
+            <Setter Property="FontSize" Value="18" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+            <Setter Property="ToolTip" Value="Pin chat" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsPinned}" Value="True">
+                    <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+                    <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+                    <Setter Property="ToolTip" Value="Unpin chat" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <DataTemplate x:Key="ChatRowTemplate">
+            <Grid Background="Transparent" Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}">
+                <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" Margin="4,6"
+                           Visibility="{Binding IsEditing, Converter={StaticResource InvertedBoolToVisibility}}" />
+                <TextBox Text="{Binding Title, UpdateSourceTrigger=PropertyChanged}" VerticalContentAlignment="Center" Margin="4,2"
+                         LostFocus="OnConversationRenameLostFocus" KeyDown="OnConversationRenameKeyDown"
+                         IsVisibleChanged="OnConversationRenameIsVisibleChanged"
+                         Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibility}}" />
+                <Grid.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="Rename"
+                                  Icon="&#xE70F;"
+                                  Command="{Binding PlacementTarget.Tag.BeginRenameConversationCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                        <MenuItem Command="{Binding PlacementTarget.Tag.TogglePinConversationCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
+                            <MenuItem.Style>
+                                <Style TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
+                                    <Setter Property="Header" Value="Pin" />
+                                    <Setter Property="Icon" Value="&#xE718;" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding PlacementTarget.DataContext.IsPinned, RelativeSource={RelativeSource AncestorType=ContextMenu}}" Value="True">
+                                            <Setter Property="Header" Value="Unpin" />
+                                            <Setter Property="Icon" Value="&#xE77A;" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </MenuItem.Style>
+                        </MenuItem>
+                        <Separator />
+                        <MenuItem Header="Delete"
+                                  Icon="&#xE74D;"
+                                  Style="{StaticResource DangerMenuItem}"
+                                  Command="{Binding PlacementTarget.Tag.DeleteConversationCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                    </ContextMenu>
+                </Grid.ContextMenu>
+                <Grid.InputBindings>
+                    <MouseBinding MouseAction="LeftClick"
+                                  Command="{Binding DataContext.OpenConversationCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                  CommandParameter="{Binding}" />
+                </Grid.InputBindings>
+            </Grid>
+        </DataTemplate>
     </Window.Resources>
 
     <Grid>
@@ -130,34 +188,29 @@
                                 <TextBlock Text="Settings" Margin="8,0,0,0" Visibility="{Binding DataContext.IsSidebarCollapsed, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource InvertedBoolToVisibility}}" />
                             </StackPanel>
                         </Button>
-                        <TextBlock Text="Recent chats" Style="{StaticResource Muted}" Margin="12,16,0,6" FontSize="12"
-                                   Visibility="{Binding IsSidebarCollapsed, Converter={StaticResource InvertedBoolToVisibility}}" />
                     </StackPanel>
 
-                    <ListBox ItemsSource="{Binding Conversations}" SelectedItem="{Binding SelectedConversation, Mode=OneWay}"
-                             HorizontalContentAlignment="Stretch" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                             Visibility="{Binding IsSidebarCollapsed, Converter={StaticResource InvertedBoolToVisibility}}">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <Grid Background="Transparent">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" Margin="4,6" />
-                                    <Button Grid.Column="1" Content="&#xE74D;" Style="{StaticResource IconButton}"
-                                            ToolTip="Delete chat" AutomationProperties.Name="Delete chat"
-                                            Command="{Binding DataContext.DeleteConversationCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                            CommandParameter="{Binding}" />
-                                    <Grid.InputBindings>
-                                        <MouseBinding MouseAction="LeftClick"
-                                                      Command="{Binding DataContext.OpenConversationCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                      CommandParameter="{Binding}" />
-                                    </Grid.InputBindings>
-                                </Grid>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
+                    <StackPanel Visibility="{Binding IsSidebarCollapsed, Converter={StaticResource InvertedBoolToVisibility}}">
+                        <TextBlock Text="Pinned chats" Style="{StaticResource Muted}" Margin="12,4,0,6" FontSize="12"
+                                   Visibility="{Binding PinnedConversations.Count, Converter={StaticResource CountToVisibility}}" />
+                        <ListBox ItemsSource="{Binding PinnedConversations}" SelectedItem="{Binding SelectedConversation, Mode=OneWay}"
+                                 HorizontalContentAlignment="Stretch" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                 Visibility="{Binding PinnedConversations.Count, Converter={StaticResource CountToVisibility}}"
+                                 ItemTemplate="{StaticResource ChatRowTemplate}" />
+                        <Grid Margin="12,16,0,6">
+                            <TextBlock Text="Recent chats" Style="{StaticResource Muted}" FontSize="12" VerticalAlignment="Center" />
+                            <Button Content="&#xE710;" FontFamily="Segoe MDL2 Assets" Style="{StaticResource IconButton}"
+                                    HorizontalAlignment="Right" Padding="4" AutomationProperties.Name="New chat"
+                                    Command="{Binding NewChatCommand}">
+                                <Button.ToolTip>
+                                    <ToolTip Content="New chat" />
+                                </Button.ToolTip>
+                            </Button>
+                        </Grid>
+                        <ListBox ItemsSource="{Binding RecentConversations}" SelectedItem="{Binding SelectedConversation, Mode=OneWay}"
+                                 HorizontalContentAlignment="Stretch" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                 ItemTemplate="{StaticResource ChatRowTemplate}" />
+                    </StackPanel>
                 </DockPanel>
             </Border>
 

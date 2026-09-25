@@ -14,6 +14,7 @@ public static class Migrator
         ("v4_meetings_schema", V4Meetings.Sql),
         ("v5_background_context", V5BackgroundContext.Sql),
         ("v6_activity_signals", V6ActivitySignals.Sql),
+        ("v7_conversation_pins", V7ConversationPins.Sql),
     };
 
     public static void Run(Db db)

@@ -67,7 +67,8 @@ public sealed partial class MainViewModel : ObservableObject
     public MeetingBannerViewModel Banner { get; }
     public LocalToolsViewModel LocalTools { get; }
     public OnboardingViewModel Onboarding { get; }
-    public ObservableCollection<Conversation> Conversations { get; } = new();
+    public ObservableCollection<Conversation> PinnedConversations { get; } = new();
+    public ObservableCollection<Conversation> RecentConversations { get; } = new();
 
     public MainViewModel(AppServices services)
     {
@@ -224,6 +225,25 @@ public sealed partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private void BeginRenameConversation(Conversation conversation) => conversation.IsEditing = true;
+
+    public async Task CommitRenameConversationAsync(Conversation conversation)
+    {
+        var title = conversation.Title.Trim();
+        conversation.Title = string.IsNullOrWhiteSpace(title) ? "New Chat" : title;
+        conversation.IsEditing = false;
+        await _services.Conversations.SetTitleAsync(conversation.Title, conversation.Id);
+    }
+
+    [RelayCommand]
+    private async Task TogglePinConversationAsync(Conversation conversation)
+    {
+        conversation.IsPinned = !conversation.IsPinned;
+        await _services.Conversations.SetPinnedAsync(conversation.IsPinned, conversation.Id);
+        await ReloadConversationsAsync();
+    }
+
+    [RelayCommand]
     private async Task DeleteConversationAsync(Conversation conversation)
     {
         if (!ConfirmDialog.AskDeleteChat(conversation.Title)) return;
@@ -246,8 +266,12 @@ public sealed partial class MainViewModel : ObservableObject
     private async Task ReloadConversationsAsync()
     {
         var list = await _services.Conversations.FetchActiveConversationsAsync();
-        Conversations.Clear();
-        foreach (var conversation in list) Conversations.Add(conversation);
+        PinnedConversations.Clear();
+        RecentConversations.Clear();
+        foreach (var conversation in list)
+        {
+            (conversation.IsPinned ? PinnedConversations : RecentConversations).Add(conversation);
+        }
     }
 
     private void RefreshStatus()
