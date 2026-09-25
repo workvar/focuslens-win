@@ -19,6 +19,7 @@
                 <ResourceDictionary Source="Themes/Text.xaml" />
                 <ResourceDictionary Source="Themes/Cards.xaml" />
                 <ResourceDictionary Source="Themes/Buttons.xaml" />
+                <ResourceDictionary Source="Themes/Focus.xaml" />
                 <ResourceDictionary Source="Themes/Inputs.xaml" />
                 <ResourceDictionary Source="Themes/ComboBoxes.xaml" />
                 <ResourceDictionary Source="Themes/Toggles.xaml" />
