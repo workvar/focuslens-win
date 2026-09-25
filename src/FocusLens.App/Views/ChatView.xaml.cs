@@ -43,6 +43,21 @@ public partial class ChatView : UserControl
         }, System.Windows.Threading.DispatcherPriority.Input);
     }
 
+    private void CopyMessage_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: ChatMessageViewModel message } && !string.IsNullOrEmpty(message.Content))
+            Clipboard.SetText(message.Content);
+    }
+
+    private void EditMessage_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is not ChatViewModel viewModel || sender is not FrameworkElement { DataContext: ChatMessageViewModel message })
+            return;
+
+        viewModel.InputText = message.Content;
+        FocusInput();
+    }
+
     /// <summary>Enter sends; the command's own CanExecute decides whether that is allowed right now.</summary>
     private void OnInputKeyDown(object sender, KeyEventArgs e)
     {

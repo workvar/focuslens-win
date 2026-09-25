@@ -8,6 +8,14 @@
         <Setter Property="TextWrapping" Value="NoWrap" />
     </Style>
 
+    <Style TargetType="{x:Type ToolTip}">
+        <Setter Property="Background" Value="{DynamicResource PopupBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Padding" Value="8,4" />
+    </Style>
+
     <!-- Secondary button: quiet surface, visible border, 8 radius so it reads as a button. -->
     <Style TargetType="Button">
         <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />

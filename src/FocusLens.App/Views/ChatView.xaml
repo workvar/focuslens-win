@@ -37,15 +37,31 @@
                                     Visibility="{Binding IsUser, Converter={StaticResource BoolToVisibility}}">
                                 <TextBlock Text="{Binding Content}" Foreground="{DynamicResource AccentTextBrush}" />
                             </Border>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
+                                    Visibility="{Binding IsUser, Converter={StaticResource BoolToVisibility}}">
+                                <Button Content="&#xE70F;" FontFamily="Segoe MDL2 Assets" Style="{StaticResource IconButton}"
+                                        Padding="6,4" MinWidth="28" MinHeight="28" ToolTip="Edit message"
+                                        AutomationProperties.Name="Edit message" Click="EditMessage_Click" />
+                                <Button Content="&#xE8C8;" FontFamily="Segoe MDL2 Assets" Style="{StaticResource IconButton}"
+                                        Padding="6,4" MinWidth="28" MinHeight="28" ToolTip="Copy message"
+                                        AutomationProperties.Name="Copy message" Click="CopyMessage_Click" />
+                            </StackPanel>
                             <!-- Assistant -->
-                            <Border Style="{StaticResource Card}" HorizontalAlignment="Left" MaxWidth="700"
+                            <StackPanel HorizontalAlignment="Left" MaxWidth="700"
                                     Visibility="{Binding IsAssistant, Converter={StaticResource BoolToVisibility}}">
-                                <StackPanel>
-                                    <ctl:MarkdownText Markdown="{Binding Content}" Foreground="{DynamicResource TextBrush}" />
-                                    <TextBlock Text="Thinking..." Style="{StaticResource Muted}"
-                                               Visibility="{Binding IsStreaming, Converter={StaticResource BoolToVisibility}}" />
-                                </StackPanel>
-                            </Border>
+                                <Border Style="{StaticResource Card}">
+                                    <StackPanel>
+                                        <ctl:MarkdownText Markdown="{Binding Content}" Foreground="{DynamicResource TextBrush}" />
+                                        <TextBlock Text="Thinking..." Style="{StaticResource Muted}"
+                                                   Visibility="{Binding IsStreaming, Converter={StaticResource BoolToVisibility}}" />
+                                    </StackPanel>
+                                </Border>
+                                <Button Content="&#xE8C8;" FontFamily="Segoe MDL2 Assets" Style="{StaticResource IconButton}"
+                                        HorizontalAlignment="Left" Padding="6,4" MinWidth="28" MinHeight="28"
+                                        ToolTip="Copy response" AutomationProperties.Name="Copy response"
+                                        Click="CopyMessage_Click"
+                                        Visibility="{Binding IsStreaming, Converter={StaticResource InvertedBoolToVisibility}}" />
+                            </StackPanel>
                             <!-- Error -->
                             <Border BorderBrush="{DynamicResource DangerBrush}" BorderThickness="1" CornerRadius="12" Padding="14,10" HorizontalAlignment="Left" MaxWidth="700"
                                     Visibility="{Binding IsError, Converter={StaticResource BoolToVisibility}}">
