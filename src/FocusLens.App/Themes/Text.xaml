@@ -6,7 +6,8 @@
 
     <Style TargetType="TextBlock">
         <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
-        <Setter Property="FontFamily" Value="{StaticResource BodyFont}" />
+        <!-- No FontFamily here: an implicit setter would override the icon font on buttons whose Content is a glyph string.
+             The body font comes from the window (MainWindow FontFamily) by inheritance. -->
         <Setter Property="TextWrapping" Value="Wrap" />
     </Style>
 
