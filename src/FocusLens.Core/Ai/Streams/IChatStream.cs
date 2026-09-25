@@ -55,11 +55,10 @@ internal static class ChatStreamHelpers
     {
         await using var stream = await response.Content.ReadAsStreamAsync(ct);
         using var reader = new StreamReader(stream);
-        while (!reader.EndOfStream)
+        while (await reader.ReadLineAsync(ct) is { } line)
         {
             ct.ThrowIfCancellationRequested();
-            var line = await reader.ReadLineAsync(ct);
-            if (line is not null) yield return line;
+            yield return line;
         }
     }
 
