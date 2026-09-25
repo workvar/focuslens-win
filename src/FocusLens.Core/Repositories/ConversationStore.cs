@@ -14,7 +14,7 @@ public sealed class ConversationStore
 
     public async Task<IReadOnlyList<Conversation>> FetchActiveConversationsAsync() =>
         (await _db.QueryAsync<Conversation>(
-            "SELECT * FROM conversations WHERE archived_at IS NULL ORDER BY updated_at DESC")).ToList();
+            "SELECT * FROM conversations WHERE archived_at IS NULL ORDER BY is_pinned DESC, updated_at DESC")).ToList();
 
     public async Task<IReadOnlyList<Message>> FetchMessagesAsync(string conversationId) =>
         (await _db.QueryAsync<Message>(
@@ -69,6 +69,14 @@ public sealed class ConversationStore
         await _db.ExecuteAsync(
             "UPDATE conversations SET title = @title, updated_at = @now WHERE id = @conversationId",
             new { title, conversationId, now = Now() });
+        Changed?.Invoke();
+    }
+
+    public async Task SetPinnedAsync(bool isPinned, string conversationId)
+    {
+        await _db.ExecuteAsync(
+            "UPDATE conversations SET is_pinned = @isPinned WHERE id = @conversationId",
+            new { isPinned = isPinned ? 1 : 0, conversationId });
         Changed?.Invoke();
     }
 

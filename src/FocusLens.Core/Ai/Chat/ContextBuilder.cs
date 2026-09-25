@@ -16,9 +16,15 @@ public sealed class ContextBuilder
     {
         var (start, end, label) = DateRangeDetector.Detect(question);
         var summaries = await _repository.FetchSummariesAsync(start, end);
+        var allowed = TrackingSettings.Load();
 
         IReadOnlyList<AppActivityDetail> details;
-        try { details = await _repository.FetchAppActivityDetailsAsync(start, end); }
+        try
+        {
+            details = allowed.IsOn(TrackingItem.SendScreenTextToAi)
+                ? await _repository.FetchAppActivityDetailsAsync(start, end)
+                : Array.Empty<AppActivityDetail>();
+        }
         catch { details = Array.Empty<AppActivityDetail>(); }
 
         var categoryTotals = new Dictionary<string, int>();
@@ -51,7 +57,6 @@ public sealed class ContextBuilder
             AppDetails = details,
         };
 
-        var allowed = TrackingSettings.Load();
         if (allowed.IsOn(TrackingItem.SendSignalsToAi))
         {
             try

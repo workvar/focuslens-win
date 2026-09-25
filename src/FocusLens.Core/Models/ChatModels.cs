@@ -1,3 +1,6 @@
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+
 namespace FocusLens.Core.Models;
 
 public enum MessageRole
@@ -8,19 +11,46 @@ public enum MessageRole
     Error,
 }
 
-public sealed class Conversation
+public sealed class Conversation : INotifyPropertyChanged
 {
+    private string _title = "New Chat";
+    private bool _isPinned;
+    private bool _isEditing;
+
     public string Id { get; set; } = "";
-    public string Title { get; set; } = "New Chat";
+    public string Title
+    {
+        get => _title;
+        set => SetField(ref _title, value);
+    }
     public long CreatedAt { get; set; }
     public long UpdatedAt { get; set; }
     public long? ArchivedAt { get; set; }
     public long? SupabaseSyncedAt { get; set; }
+    public bool IsPinned
+    {
+        get => _isPinned;
+        set => SetField(ref _isPinned, value);
+    }
+    public bool IsEditing
+    {
+        get => _isEditing;
+        set => SetField(ref _isEditing, value);
+    }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
 
     public static Conversation New(string title = "New Chat", DateTimeOffset? now = null)
     {
         var ts = (now ?? DateTimeOffset.UtcNow).ToUnixTimeSeconds();
         return new Conversation { Id = Guid.NewGuid().ToString(), Title = title, CreatedAt = ts, UpdatedAt = ts };
+    }
+
+    private void SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
+    {
+        if (EqualityComparer<T>.Default.Equals(field, value)) return;
+        field = value;
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 }
 
