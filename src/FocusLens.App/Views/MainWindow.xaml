@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:FocusLens.App.ViewModels"
         xmlns:views="clr-namespace:FocusLens.App.Views"
-        Title="FocusLens" Width="1180" Height="780" MinWidth="900" MinHeight="600"
+        Title="FocusLens" Icon="pack://application:,,,/Assets/focuslens.ico" Width="1180" Height="780" MinWidth="900" MinHeight="600"
         Background="{DynamicResource WindowBrush}" WindowStartupLocation="CenterScreen"
         FontFamily="{StaticResource BodyFont}">
     <Window.Resources>
@@ -63,6 +63,8 @@
                     <StackPanel DockPanel.Dock="Top" Margin="0,4,0,12" Orientation="Horizontal">
                         <Button Content="&#xE700;" FontFamily="Segoe MDL2 Assets" Command="{Binding ToggleSidebarCommand}"
                                 Style="{StaticResource NavButton}" ToolTip="Collapse or expand" AutomationProperties.Name="Collapse or expand sidebar" Width="40" />
+                        <Image Source="pack://application:,,,/Assets/logo.png" Width="26" Height="26" Margin="6,0,0,0" RenderOptions.BitmapScalingMode="HighQuality"
+                               AutomationProperties.Name="FocusLens logo" />
                         <TextBlock Text="FocusLens" Style="{StaticResource Wordmark}" VerticalAlignment="Center" Margin="8,0,0,0"
                                    Visibility="{Binding IsSidebarCollapsed, Converter={StaticResource InvertedBoolToVisibility}}" />
                     </StackPanel>

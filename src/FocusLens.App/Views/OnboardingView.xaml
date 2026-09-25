@@ -6,6 +6,8 @@
             <StackPanel>
                 <!-- Step 1 -->
                 <StackPanel Visibility="{Binding IsWelcome, Converter={StaticResource BoolToVisibility}}">
+                    <Image Source="pack://application:,,,/Assets/logo.png" Width="72" Height="72" HorizontalAlignment="Left" Margin="0,0,0,14"
+                           RenderOptions.BitmapScalingMode="HighQuality" AutomationProperties.Name="FocusLens logo" />
                     <TextBlock Text="Welcome to FocusLens" Style="{StaticResource Title}" />
                     <TextBlock Style="{StaticResource Muted}" Margin="0,10,0,0"
                                Text="FocusLens notices which apps and sites you use, understands what you are working on, and helps you stay on track. Everything is stored on this PC." />

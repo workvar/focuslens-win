@@ -27,6 +27,7 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Assets\focuslens.ico" />
+    <Resource Include="Assets\logo.png" />
   </ItemGroup>
   <!-- The agent is built next to the app so the app can launch it. -->
   <ItemGroup>
