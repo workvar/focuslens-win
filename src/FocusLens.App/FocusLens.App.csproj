@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <RootNamespace>FocusLens.App</RootNamespace>
+    <AssemblyName>FocusLens</AssemblyName>
+    <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\focuslens.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <Using Include="System.IO" />
+    <Using Include="System.Threading" />
+    <Using Include="System.Threading.Tasks" />
+    <Using Include="System.Net.Http" />
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\FocusLens.Core\FocusLens.Core.csproj" />
+    <ProjectReference Include="..\FocusLens.Platform.Windows\FocusLens.Platform.Windows.csproj" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.*" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\focuslens.ico" />
+  </ItemGroup>
+  <!-- The agent is built next to the app so the app can launch it. -->
+  <ItemGroup>
+    <ProjectReference Include="..\FocusLens.Agent\FocusLens.Agent.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+  <Target Name="CopyAgentToOutput" AfterTargets="Build">
+    <MSBuild Projects="..\FocusLens.Agent\FocusLens.Agent.csproj" Targets="GetTargetPath" Properties="Configuration=$(Configuration)">
+      <Output TaskParameter="TargetOutputs" ItemName="AgentTarget" />
+    </MSBuild>
+    <ItemGroup>
+      <AgentFiles Include="%(AgentTarget.RootDir)%(AgentTarget.Directory)FocusLensAgent*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(AgentFiles)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+  </Target>
+</Project>

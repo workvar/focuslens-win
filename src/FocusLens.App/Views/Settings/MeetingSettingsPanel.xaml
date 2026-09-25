@@ -1,0 +1,19 @@
+<UserControl x:Class="FocusLens.App.Views.Settings.MeetingSettingsPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel MaxWidth="640" HorizontalAlignment="Left">
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <CheckBox Content="Detect meetings and offer to take notes" IsChecked="{Binding DetectionEnabled}" />
+                    <CheckBox Content="Also watch chat apps (Slack huddles, Discord calls)" IsChecked="{Binding IncludeChatApps}" Margin="0,10,0,0" />
+                    <CheckBox Content="Allow cloud summaries (sends the transcript to your cloud AI provider)" IsChecked="{Binding AllowCloudSummary}" Margin="0,10,0,0" />
+                    <CheckBox Content="Keep meeting audio after notes are made" IsChecked="{Binding KeepAudio}" Margin="0,10,0,0" />
+
+                    <TextBlock Text="Never detect these apps (executable names, one per line)" Style="{StaticResource Muted}" FontSize="12" Margin="0,16,0,4" />
+                    <TextBox Text="{Binding DenyListText, UpdateSourceTrigger=LostFocus}" AcceptsReturn="True" MinHeight="70" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

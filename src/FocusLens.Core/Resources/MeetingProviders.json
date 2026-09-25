@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "providers": [
+    {
+      "id": "zoom",
+      "appIds": ["zoom.exe"],
+      "urlPatterns": ["*.zoom.us/j/*", "*.zoom.us/wc/*", "*.zoom.us/s/*", "zoom.us/j/*"],
+      "titlePatterns": ["^Zoom Meeting", "^Zoom Webinar"],
+      "confidence": "high"
+    },
+    {
+      "id": "meet",
+      "appIds": [],
+      "urlPatterns": ["meet.google.com/*-*-*"],
+      "titlePatterns": ["^Meet [-–] "],
+      "confidence": "high"
+    },
+    {
+      "id": "teams",
+      "appIds": ["ms-teams.exe", "teams.exe"],
+      "urlPatterns": [
+        "teams.microsoft.com/l/meetup-join/*",
+        "teams.microsoft.com/v2/*",
+        "teams.live.com/meet/*"
+      ],
+      "titlePatterns": ["\\| Microsoft Teams$"],
+      "confidence": "high"
+    },
+    {
+      "id": "webex",
+      "appIds": ["webex.exe", "ciscocollabhost.exe", "atmgr.exe"],
+      "urlPatterns": ["*.webex.com/meet/*", "*.webex.com/wbxmjs/*", "*.webex.com/join/*"],
+      "titlePatterns": ["Webex"],
+      "confidence": "high"
+    },
+    {
+      "id": "whereby",
+      "appIds": [],
+      "urlPatterns": ["whereby.com/*"],
+      "titlePatterns": ["Whereby"],
+      "confidence": "high"
+    },
+    {
+      "id": "jitsi",
+      "appIds": ["jitsi meet.exe"],
+      "urlPatterns": ["meet.jit.si/*"],
+      "titlePatterns": ["Jitsi Meet"],
+      "confidence": "high"
+    },
+    {
+      "id": "discord",
+      "appIds": ["discord.exe"],
+      "urlPatterns": ["discord.com/channels/*"],
+      "titlePatterns": ["[-–] Discord$"],
+      "confidence": "low"
+    },
+    {
+      "id": "slack",
+      "appIds": ["slack.exe"],
+      "urlPatterns": ["app.slack.com/huddle/*"],
+      "titlePatterns": ["Huddle"],
+      "confidence": "low"
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+<UserControl x:Class="FocusLens.App.Views.MeetingBanner"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Border Background="{DynamicResource AccentBrush}" Padding="16,10">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="&#xE787;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource AccentTextBrush}" Margin="0,0,10,0" />
+                <StackPanel>
+                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" Foreground="{DynamicResource AccentTextBrush}" />
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding PhaseText}" Foreground="{DynamicResource AccentTextBrush}" Opacity="0.85" />
+                        <TextBlock Text="{Binding ElapsedText}" Foreground="{DynamicResource AccentTextBrush}" Margin="10,0,0,0" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding Progress, Converter={StaticResource Percent}}" Foreground="{DynamicResource AccentTextBrush}" Margin="10,0,0,0"
+                                   Visibility="{Binding ShowProgress, Converter={StaticResource BoolToVisibility}}" />
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                <Button Content="Start notes" Command="{Binding StartCommand}" Margin="6,0,0,0"
+                        Visibility="{Binding CanStart, Converter={StaticResource BoolToVisibility}}" />
+                <Button Content="Not now" Command="{Binding DismissCommand}" Margin="6,0,0,0"
+                        Visibility="{Binding CanDismiss, Converter={StaticResource BoolToVisibility}}" />
+                <Button Content="Pause" Command="{Binding PauseCommand}" Margin="6,0,0,0"
+                        Visibility="{Binding CanPause, Converter={StaticResource BoolToVisibility}}" />
+                <Button Content="Resume" Command="{Binding ResumeCommand}" Margin="6,0,0,0"
+                        Visibility="{Binding CanResume, Converter={StaticResource BoolToVisibility}}" />
+                <Button Content="Stop" Command="{Binding StopCommand}" Margin="6,0,0,0"
+                        Visibility="{Binding CanStop, Converter={StaticResource BoolToVisibility}}" />
+                <Button Content="Dismiss" Command="{Binding AcknowledgeCommand}" Margin="6,0,0,0"
+                        Visibility="{Binding CanAcknowledge, Converter={StaticResource BoolToVisibility}}" />
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>

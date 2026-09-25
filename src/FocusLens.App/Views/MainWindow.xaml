@@ -1,0 +1,160 @@
+<Window x:Class="FocusLens.App.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:FocusLens.App.ViewModels"
+        xmlns:views="clr-namespace:FocusLens.App.Views"
+        Title="FocusLens" Width="1180" Height="780" MinWidth="900" MinHeight="600"
+        Background="{DynamicResource WindowBrush}" WindowStartupLocation="CenterScreen"
+        FontFamily="Segoe UI Variable Text, Segoe UI">
+    <Window.Resources>
+        <Style x:Key="NavButton" TargetType="Button">
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Padding" Value="12,9" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Root" Background="{TemplateBinding Background}" CornerRadius="8" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
+                            </Trigger>
+                            <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource Self}}" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
+                            </DataTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SidebarWidth" TargetType="Border">
+            <Setter Property="Width" Value="248" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsSidebarCollapsed}" Value="True">
+                    <Setter Property="Width" Value="64" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <!-- Main shell -->
+        <Grid Visibility="{Binding IsOnboarding, Converter={StaticResource InvertedBoolToVisibility}}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Sidebar -->
+            <Border Grid.Column="0" Style="{StaticResource SidebarWidth}" Background="{DynamicResource SurfaceBrush}"
+                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
+                <DockPanel Margin="10">
+                    <StackPanel DockPanel.Dock="Top" Margin="0,4,0,12" Orientation="Horizontal">
+                        <Button Content="&#xE700;" FontFamily="Segoe MDL2 Assets" Command="{Binding ToggleSidebarCommand}"
+                                Style="{StaticResource NavButton}" ToolTip="Collapse or expand" Width="40" />
+                        <TextBlock Text="FocusLens" Style="{StaticResource Heading}" VerticalAlignment="Center" Margin="8,0,0,0"
+                                   Visibility="{Binding IsSidebarCollapsed, Converter={StaticResource InvertedBoolToVisibility}}" />
+                    </StackPanel>
+
+                    <!-- Bottom status -->
+                    <StackPanel DockPanel.Dock="Bottom" Margin="0,8,0,0">
+                        <Border Style="{StaticResource Card}" Padding="10"
+                                Visibility="{Binding IsSidebarCollapsed, Converter={StaticResource InvertedBoolToVisibility}}">
+                            <StackPanel>
+                                <TextBlock Text="{Binding AgentStatusText}" FontWeight="SemiBold" />
+                                <Button Content="{Binding IsPaused, Converter={StaticResource PauseLabel}}" Margin="0,8,0,0"
+                                        Command="{Binding TogglePauseCommand}" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <StackPanel DockPanel.Dock="Top">
+                        <Button Style="{StaticResource NavButton}" Tag="{Binding IsDashboardActive}"
+                                Command="{Binding NavigateCommand}" CommandParameter="{x:Static vm:NavPage.Dashboard}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE9D9;" FontFamily="Segoe MDL2 Assets" Width="24" />
+                                <TextBlock Text="Dashboard" Margin="8,0,0,0" Visibility="{Binding DataContext.IsSidebarCollapsed, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource InvertedBoolToVisibility}}" />
+                            </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource NavButton}" Tag="{Binding IsChatActive}"
+                                Command="{Binding NewChatCommand}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE8F2;" FontFamily="Segoe MDL2 Assets" Width="24" />
+                                <TextBlock Text="New chat" Margin="8,0,0,0" Visibility="{Binding DataContext.IsSidebarCollapsed, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource InvertedBoolToVisibility}}" />
+                            </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource NavButton}" Tag="{Binding IsMeetingsActive}"
+                                Command="{Binding NavigateCommand}" CommandParameter="{x:Static vm:NavPage.Meetings}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE787;" FontFamily="Segoe MDL2 Assets" Width="24" />
+                                <TextBlock Text="Meetings" Margin="8,0,0,0" Visibility="{Binding DataContext.IsSidebarCollapsed, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource InvertedBoolToVisibility}}" />
+                            </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource NavButton}" Tag="{Binding IsSettingsActive}"
+                                Command="{Binding NavigateCommand}" CommandParameter="{x:Static vm:NavPage.Settings}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" Width="24" />
+                                <TextBlock Text="Settings" Margin="8,0,0,0" Visibility="{Binding DataContext.IsSidebarCollapsed, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource InvertedBoolToVisibility}}" />
+                            </StackPanel>
+                        </Button>
+                        <TextBlock Text="Recent chats" Style="{StaticResource Muted}" Margin="12,16,0,6" FontSize="12"
+                                   Visibility="{Binding IsSidebarCollapsed, Converter={StaticResource InvertedBoolToVisibility}}" />
+                    </StackPanel>
+
+                    <ListBox ItemsSource="{Binding Conversations}" SelectedItem="{Binding SelectedConversation, Mode=OneWay}"
+                             HorizontalContentAlignment="Stretch" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                             Visibility="{Binding IsSidebarCollapsed, Converter={StaticResource InvertedBoolToVisibility}}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Background="Transparent">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" Margin="4,6" />
+                                    <Button Grid.Column="1" Content="&#xE74D;" FontFamily="Segoe MDL2 Assets" Padding="6,4" Background="Transparent" BorderThickness="0"
+                                            ToolTip="Delete chat"
+                                            Command="{Binding DataContext.DeleteConversationCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            CommandParameter="{Binding}" />
+                                    <Grid.InputBindings>
+                                        <MouseBinding MouseAction="LeftClick"
+                                                      Command="{Binding DataContext.OpenConversationCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                      CommandParameter="{Binding}" />
+                                    </Grid.InputBindings>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </DockPanel>
+            </Border>
+
+            <!-- Content -->
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <views:MeetingBanner Grid.Row="0" DataContext="{Binding Banner}"
+                                     Visibility="{Binding IsVisible, Converter={StaticResource BoolToVisibility}}" />
+
+                <Border Grid.Row="1" Background="{DynamicResource SurfaceAltBrush}" Padding="16,8"
+                        Visibility="{Binding RestrictionNotice, Converter={StaticResource NotNullToVisibility}}">
+                    <TextBlock Text="{Binding RestrictionNotice}" Style="{StaticResource Muted}" />
+                </Border>
+
+                <ContentControl Grid.Row="2" Content="{Binding CurrentPage}" />
+            </Grid>
+        </Grid>
+
+        <!-- First-run onboarding -->
+        <views:OnboardingView DataContext="{Binding Onboarding}"
+                              Visibility="{Binding DataContext.IsOnboarding, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibility}}" />
+    </Grid>
+</Window>

@@ -1,0 +1,52 @@
+<UserControl x:Class="FocusLens.App.Views.Settings.GeneralSettingsPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel MaxWidth="640" HorizontalAlignment="Left">
+            <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                <StackPanel>
+                    <TextBlock Text="Appearance" Style="{StaticResource Heading}" />
+                    <ComboBox ItemsSource="{Binding AppearanceOptions}" SelectedIndex="{Binding AppearanceIndex}" Margin="0,10,0,0" Width="220" HorizontalAlignment="Left" />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                <StackPanel>
+                    <TextBlock Text="Tracking agent" Style="{StaticResource Heading}" />
+                    <TextBlock Text="{Binding AgentStatusText}" Style="{StaticResource Muted}" Margin="0,6,0,0" />
+                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                        <Button Content="Start" Command="{Binding StartAgentCommand}" />
+                        <Button Content="Stop" Command="{Binding StopAgentCommand}" Margin="8,0,0,0" />
+                    </StackPanel>
+                    <CheckBox Content="Start tracking when I sign in to Windows" IsChecked="{Binding StartWithWindows}" Margin="0,14,0,0" />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                <StackPanel>
+                    <TextBlock Text="Account" Style="{StaticResource Heading}" />
+                    <TextBlock Style="{StaticResource Muted}" Margin="0,6,0,0" Text="Not configured. Set FOCUSLENS_SUPABASE_URL and FOCUSLENS_SUPABASE_ANON_KEY to enable Google sign-in."
+                               Visibility="{Binding Auth.IsConfigured, Converter={StaticResource InvertedBoolToVisibility}}" />
+                    <StackPanel Visibility="{Binding Auth.IsConfigured, Converter={StaticResource BoolToVisibility}}">
+                        <TextBlock Text="{Binding Auth.CurrentUser.Email}" Margin="0,6,0,0"
+                                   Visibility="{Binding Auth.CurrentUser, Converter={StaticResource NotNullToVisibility}}" />
+                        <Button Content="Sign in with Google" Command="{Binding SignInCommand}" HorizontalAlignment="Left" Margin="0,10,0,0"
+                                Visibility="{Binding Auth.CurrentUser, Converter={StaticResource InvertedNullToVisibility}}" />
+                        <Button Content="Sign out" Command="{Binding SignOutCommand}" HorizontalAlignment="Left" Margin="0,10,0,0"
+                                Visibility="{Binding Auth.CurrentUser, Converter={StaticResource NotNullToVisibility}}" />
+                        <TextBlock Text="{Binding Auth.AuthError}" Foreground="{DynamicResource DangerBrush}" Margin="0,8,0,0"
+                                   Visibility="{Binding Auth.AuthError, Converter={StaticResource NotNullToVisibility}}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Text="Your data" Style="{StaticResource Heading}" />
+                    <TextBlock Text="{Binding DataFolder}" Style="{StaticResource Muted}" Margin="0,6,0,0" />
+                    <Button Content="Open data folder" Command="{Binding OpenDataFolderCommand}" HorizontalAlignment="Left" Margin="0,10,0,0" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
