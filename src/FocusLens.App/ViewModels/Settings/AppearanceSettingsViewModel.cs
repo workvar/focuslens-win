@@ -19,6 +19,7 @@ public sealed partial class AppearanceSettingsViewModel : ObservableObject
         _mode = settings.Appearance;
         _liquidGlass = settings.LiquidGlass;
         _glassTransparency = settings.GlassTransparency;
+        ThemeManager.Changed += OnThemeChanged;
     }
 
     public bool IsSystem { get => Mode == AppearanceMode.System; set { if (value) Mode = AppearanceMode.System; } }
@@ -35,6 +36,12 @@ public sealed partial class AppearanceSettingsViewModel : ObservableObject
     /// <summary>The sidebar button offers the opposite of what is showing: a sun in dark mode, a moon in light mode.</summary>
     public string ToggleGlyph => ThemeManager.IsDark ? "" : "";
     public string ToggleLabel => ThemeManager.IsDark ? "Light mode" : "Dark mode";
+
+    private void OnThemeChanged()
+    {
+        OnPropertyChanged(nameof(ToggleGlyph));
+        OnPropertyChanged(nameof(ToggleLabel));
+    }
 
     partial void OnModeChanged(AppearanceMode value)
     {
