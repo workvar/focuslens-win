@@ -7,7 +7,7 @@ One file per release, named `vX.Y.Z.md`. The release workflow publishes `docs/re
 | Phase | Version | Notes file |
 |---|---|---|
 | 1 Foundations | 1.0.0 | [v1.0.0.md](v1.0.0.md) |
-| 2 Memory and polish | 1.1.0 | to be written when the phase completes |
+| 2 Memory and polish | 1.1.0 | [v1.1.0.md](v1.1.0.md) (draft, phase not complete) |
 | 3 Focus tools | 1.2.0 | to be written when the phase completes |
 | 4 Intelligence | 1.3.0 | to be written when the phase completes |
 
