@@ -33,6 +33,29 @@
         </Setter>
     </Style>
 
+    <!-- Tab headers wrap onto a second line in a fixed order. The system TabControl moves the selected row next to the
+         content, so on a narrow window the tabs jumped under the pointer and the wrong one got clicked. -->
+    <Style TargetType="TabControl">
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TabControl">
+                    <Grid KeyboardNavigation.TabNavigation="Local">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
+                            <WrapPanel IsItemsHost="True" KeyboardNavigation.TabIndex="1" />
+                        </Border>
+                        <ContentPresenter x:Name="PART_SelectedContentHost" Grid.Row="1" ContentSource="SelectedContent"
+                                          Margin="{TemplateBinding Padding}" KeyboardNavigation.TabIndex="2" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <Style TargetType="TabItem">
         <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
         <Setter Property="Padding" Value="14,8" />

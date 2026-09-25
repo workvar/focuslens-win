@@ -75,6 +75,14 @@ public sealed partial class FocusSettingsViewModel : ObservableObject
     }
 }
 
-public sealed record PollChoice(int Seconds, string Label);
+/// <remarks>ToString returns the label: the themed ComboBox shows the selected item as text.</remarks>
+public sealed record PollChoice(int Seconds, string Label)
+{
+    public override string ToString() => Label;
+}
 
-public sealed record VisualEffectsChoice(FocusVisualEffects Value, string Label);
+/// <remarks>ToString returns the label: the themed ComboBox shows the selected item as text.</remarks>
+public sealed record VisualEffectsChoice(FocusVisualEffects Value, string Label)
+{
+    public override string ToString() => Label;
+}

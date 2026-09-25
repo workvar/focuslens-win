@@ -20,8 +20,12 @@ public static class FocusFormat
     /// <summary>"3 visits", "1 visit".</summary>
     public static string Plural(int count, string noun) => $"{count} {noun}{(count == 1 ? "" : "s")}";
 
-    public static string Day(DateTime utc) =>
-        utc.ToLocalTime().ToString("MMM d, yyyy, t", CultureInfo.CurrentCulture);
+    /// <summary>"Sep 25, 2026, 5:30 PM". The time uses the standard short-time format, so it follows the PC's 12 or 24 hour setting.</summary>
+    public static string Day(DateTime utc)
+    {
+        var local = utc.ToLocalTime();
+        return $"{local.ToString("MMM d, yyyy", CultureInfo.CurrentCulture)}, {local.ToString("t", CultureInfo.CurrentCulture)}";
+    }
 
     public static string Clock(DateTime utc) => utc.ToLocalTime().ToString("t", CultureInfo.CurrentCulture);
 

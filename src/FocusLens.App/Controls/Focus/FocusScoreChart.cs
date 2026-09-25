@@ -44,7 +44,7 @@ public sealed class FocusScoreChart : ThemedElement
 
         var label = ChartPalette.Text("Minutes into the session", 10, muted, dip);
         dc.DrawText(label, new Point(plot.Left + (plot.Width - label.Width) / 2, plot.Bottom + 18));
-        var end = ChartPalette.Text($"{minutes:0}", 10, muted, dip);
+        var end = ChartPalette.Text(minutes < 10 ? $"{minutes:0.#}" : $"{minutes:0}", 10, muted, dip);
         dc.DrawText(end, new Point(plot.Right - end.Width, plot.Bottom + 3));
         dc.DrawText(ChartPalette.Text("0", 10, muted, dip), new Point(plot.Left, plot.Bottom + 3));
     }
