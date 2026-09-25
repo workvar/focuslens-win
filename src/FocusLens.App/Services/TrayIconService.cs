@@ -46,7 +46,7 @@ public sealed class TrayIconService : IDisposable
         _icon.Text = paused ? "FocusLens (paused)" : "FocusLens";
     }
 
-    public void SetUpdateReady(string version) => _updateItem.Text = $"Restart to update (v{version})";
+    public void SetUpdateItem(string text) => _updateItem.Text = text;
 
     public void SetTooltip(string text) => _icon.Text = text.Length > 63 ? text[..63] : text;
 

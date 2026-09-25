@@ -4,8 +4,9 @@ using Velopack.Sources;
 namespace FocusLens.App.Services;
 
 /// <summary>
-/// Checks GitHub Releases for a newer version, downloads it in the background, and applies it
-/// when the user restarts (or quits). Does nothing when running from a dev build.
+/// Checks GitHub Releases for a newer version. Checking never downloads: the user is told about the
+/// release first and calls <see cref="DownloadAsync"/> when they agree, then <see cref="ApplyAndRestart"/>.
+/// Does nothing when running from a dev build.
 /// </summary>
 public sealed class UpdateService : IDisposable
 {
@@ -17,15 +18,20 @@ public sealed class UpdateService : IDisposable
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly Action<string, Exception> _logError;
     private CancellationTokenSource? _cts;
+    private UpdateInfo? _info;
     private VelopackAsset? _ready;
 
     public UpdateService(Action<string, Exception> logError) => _logError = logError;
 
-    /// <summary>Raised with the new version once it is downloaded and ready to apply.</summary>
-    public event Action<string>? UpdateReady;
+    /// <summary>Raised on every state change, possibly from a background thread.</summary>
+    public event Action<UpdateState>? StateChanged;
 
+    public UpdateState State { get; private set; } = new(UpdateStatus.Idle);
     public bool IsInstalled => _manager.IsInstalled;
-    public string? ReadyVersion => _ready?.Version.ToString();
+    public string CurrentVersion => _manager.CurrentVersion?.ToString() ?? DevVersion;
+
+    private static string DevVersion =>
+        System.Reflection.Assembly.GetEntryAssembly()?.GetName().Version?.ToString(3) ?? "dev";
 
     public void Start()
     {
@@ -34,27 +40,59 @@ public sealed class UpdateService : IDisposable
         _ = RunLoopAsync(_cts.Token);
     }
 
-    /// <summary>Returns true when an update is downloaded and ready (now or from an earlier check).</summary>
-    public async Task<bool> CheckAsync()
+    /// <summary>Looks for a newer release. Leaves the state at Available, UpToDate or Failed.</summary>
+    public async Task CheckAsync()
     {
-        if (!IsInstalled) return false;
-        if (_ready is not null) return true;
+        if (!IsInstalled || State.Status is UpdateStatus.Available or UpdateStatus.Downloading or UpdateStatus.Ready) return;
 
         await _gate.WaitAsync();
         try
         {
+            SetState(new(UpdateStatus.Checking));
             var info = await _manager.CheckForUpdatesAsync();
-            if (info is null) return false;
+            if (info is null)
+            {
+                SetState(new(UpdateStatus.UpToDate));
+                return;
+            }
 
-            await _manager.DownloadUpdatesAsync(info);
-            _ready = info.TargetFullRelease;
-            UpdateReady?.Invoke(_ready.Version.ToString());
-            return true;
+            _info = info;
+            var target = info.TargetFullRelease;
+            SetState(new(UpdateStatus.Available, target.Version.ToString(), target.NotesMarkdown));
         }
         catch (Exception ex)
         {
             _logError("Update check failed", ex);
-            return false;
+            SetState(new(UpdateStatus.Failed, Error: "Could not reach GitHub. Check your connection and try again."));
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    /// <summary>Downloads the release found by <see cref="CheckAsync"/>. Call only after the user agreed.</summary>
+    public async Task DownloadAsync()
+    {
+        var info = _info;
+        if (info is null || State.Status != UpdateStatus.Available) return;
+
+        var target = info.TargetFullRelease;
+        var version = target.Version.ToString();
+        var notes = target.NotesMarkdown;
+
+        await _gate.WaitAsync();
+        try
+        {
+            SetState(new(UpdateStatus.Downloading, version, notes));
+            await _manager.DownloadUpdatesAsync(info, percent => SetState(new(UpdateStatus.Downloading, version, notes, percent)));
+            _ready = target;
+            SetState(new(UpdateStatus.Ready, version, notes, 100));
+        }
+        catch (Exception ex)
+        {
+            _logError("Update download failed", ex);
+            SetState(new(UpdateStatus.Available, version, notes, Error: "Download failed. Check your connection and try again."));
         }
         finally
         {
@@ -68,18 +106,25 @@ public sealed class UpdateService : IDisposable
         if (_ready is not null) _manager.ApplyUpdatesAndRestart(_ready);
     }
 
-    /// <summary>Applies the downloaded update after this process exits, without relaunching.</summary>
+    /// <summary>Applies a downloaded update after this process exits, without relaunching.</summary>
     public void ApplyOnExit()
     {
         if (_ready is not null) _manager.WaitExitThenApplyUpdates(_ready, silent: true, restart: false);
     }
 
+    private void SetState(UpdateState state)
+    {
+        State = state;
+        StateChanged?.Invoke(state);
+    }
+
+    /// <summary>Checks periodically until the user has been told about a release.</summary>
     private async Task RunLoopAsync(CancellationToken token)
     {
         try
         {
             await Task.Delay(StartupDelay, token);
-            while (!token.IsCancellationRequested && _ready is null)
+            while (!token.IsCancellationRequested && State.Status is not (UpdateStatus.Available or UpdateStatus.Downloading or UpdateStatus.Ready))
             {
                 await CheckAsync();
                 await Task.Delay(CheckInterval, token);

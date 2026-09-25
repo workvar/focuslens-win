@@ -26,7 +26,7 @@ Details and per-item status are in [ROADMAP.md](ROADMAP.md). Release history is 
 - **Meetings.** Automatic detection, audio capture, offline transcription, and summaries with action items.
 - **Privacy controls.** Pause tracking and exclude apps or URLs.
 - **Themes.** Forest light and dark themes.
-- **Auto update.** Velopack checks GitHub Releases in the background.
+- **Auto update.** Velopack checks GitHub Releases in the background and asks before downloading. See [docs/auto-update.md](docs/auto-update.md).
 
 ## Architecture
 

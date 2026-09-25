@@ -9,7 +9,7 @@
         </Grid.RowDefinitions>
         <TextBlock Text="Settings" Style="{StaticResource Title}" Margin="0,0,0,16" />
 
-        <TabControl Grid.Row="1" Background="Transparent" BorderThickness="0" Padding="0,16,0,0">
+        <TabControl Grid.Row="1" SelectedIndex="{Binding SelectedTab, Mode=TwoWay}" Background="Transparent" BorderThickness="0" Padding="0,16,0,0">
             <TabItem Header="General">
                 <views:GeneralSettingsPanel DataContext="{Binding General}" />
             </TabItem>
@@ -30,6 +30,9 @@
             </TabItem>
             <TabItem Header="Status">
                 <views:StatusSettingsPanel DataContext="{Binding Status}" />
+            </TabItem>
+            <TabItem Header="Updates">
+                <views:UpdatesSettingsPanel DataContext="{Binding Updates}" />
             </TabItem>
         </TabControl>
     </Grid>

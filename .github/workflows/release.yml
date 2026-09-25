@@ -50,6 +50,9 @@ jobs:
 
       - name: Package installer and update feed
         run: |
+          # Same hand-written notes as the GitHub release, so the in-app "What's new" matches.
+          $notes = "docs/release-notes/v$($env:VERSION.Split('-')[0]).md"
+          $notesArgs = if (Test-Path $notes) { @("--releaseNotes", $notes) } else { @() }
           vpk pack `
             --packId FocusLens `
             --packTitle FocusLens `
@@ -57,7 +60,8 @@ jobs:
             --packDir dist `
             --mainExe FocusLens.exe `
             --icon src/FocusLens.App/Assets/focuslens.ico `
-            --outputDir Releases
+            --outputDir Releases `
+            @notesArgs
           if ($LASTEXITCODE -ne 0) { throw "vpk pack failed" }
           # One installer for users: drop the portable zip.
           Get-ChildItem Releases -Filter "*Portable*" | Remove-Item -Force

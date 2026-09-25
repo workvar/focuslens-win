@@ -11,6 +11,7 @@ Working towards **v1.0.0** (Phase 1).
 - Screen context: active-window capture with on-device Windows OCR. Images are not kept.
 - Meeting detection, audio capture, offline transcription, and AI meeting summaries.
 - Velopack auto-update from GitHub Releases and a tag-driven GitHub Actions release pipeline.
+- Update prompt: a tray notification announces new releases, and an Updates tab in Settings shows the notes and downloads only after the user agrees. See [docs/auto-update.md](docs/auto-update.md).
 - Google sign-in through Supabase (PKCE with a loopback redirect).
 
 ### Changed

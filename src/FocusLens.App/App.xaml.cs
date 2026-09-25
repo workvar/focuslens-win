@@ -55,7 +55,8 @@ public partial class App : Application
         _services.Tray.PauseToggled += () => Dispatcher.Invoke(_main.TogglePause);
         _services.Tray.QuitRequested += () => Dispatcher.Invoke(Quit);
         _services.Tray.UpdateRequested += () => _ = Dispatcher.InvokeAsync(HandleUpdateRequestAsync);
-        _services.Updates.UpdateReady += OnUpdateReady;
+        _services.Updates.StateChanged += OnUpdateStateChanged;
+        _main.Settings.Updates.RestartRequested += () => _ = Dispatcher.InvokeAsync(ApplyUpdateAsync);
         _services.Updates.Start();
 
         ListenForShowRequests();
@@ -95,11 +96,29 @@ public partial class App : Application
         });
     }
 
-    private void OnUpdateReady(string version) => Dispatcher.Invoke(() =>
+    /// <summary>Keeps the tray menu in step with the updater and tells the user once when a release is out.</summary>
+    private void OnUpdateStateChanged(UpdateState state) => _ = Dispatcher.InvokeAsync(() =>
     {
-        _services!.Tray.SetUpdateReady(version);
-        _services.Tray.Notify("Update ready", $"FocusLens {version} is ready. Click to restart and update.", () => _ = ApplyUpdateAsync());
+        var tray = _services!.Tray;
+        tray.SetUpdateItem(state.Status switch
+        {
+            UpdateStatus.Available => $"Update available (v{state.Version})",
+            UpdateStatus.Downloading => "Downloading update...",
+            UpdateStatus.Ready => $"Restart to update (v{state.Version})",
+            _ => "Check for updates",
+        });
+
+        if (state.Status == UpdateStatus.Available && state.Error is null)
+        {
+            tray.Notify("Update available", $"FocusLens {state.Version} is out. Click to see what's new.", () => _ = ShowUpdatesAsync());
+        }
     });
+
+    private async Task ShowUpdatesAsync()
+    {
+        ShowWindow();
+        await _main!.ShowUpdatesAsync();
+    }
 
     private async Task HandleUpdateRequestAsync()
     {
@@ -110,8 +129,21 @@ public partial class App : Application
             return;
         }
 
-        if (updates.ReadyVersion is not null) await ApplyUpdateAsync();
-        else if (!await updates.CheckAsync()) _services.Tray.Notify("FocusLens", "You are up to date.");
+        switch (updates.State.Status)
+        {
+            case UpdateStatus.Ready:
+                await ApplyUpdateAsync();
+                break;
+            case UpdateStatus.Available:
+            case UpdateStatus.Downloading:
+                await ShowUpdatesAsync();
+                break;
+            default:
+                await updates.CheckAsync();
+                if (updates.State.Status == UpdateStatus.UpToDate) _services.Tray.Notify("FocusLens", "You are up to date.");
+                else if (updates.State.Status == UpdateStatus.Failed) _services.Tray.Notify("FocusLens", "Could not check for updates.");
+                break;
+        }
     }
 
     /// <summary>Stops the agent so its files are free, then lets Velopack swap versions and relaunch.</summary>

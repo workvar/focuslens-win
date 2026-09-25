@@ -67,7 +67,8 @@ public sealed partial class MainViewModel : ObservableObject
             new PrivacySettingsViewModel(),
             new AiSettingsViewModel(services.Ai, services.Secrets, services.AiClient),
             new MeetingSettingsViewModel(services.Ai),
-            Status);
+            Status,
+            new UpdatesSettingsViewModel(services.Updates));
         Onboarding = new OnboardingViewModel(services, CompleteOnboarding);
 
         IsOnboarding = !services.Settings.OnboardingCompleted;
@@ -130,6 +131,12 @@ public sealed partial class MainViewModel : ObservableObject
                 Settings.General.RefreshAgentStatus();
                 break;
         }
+    }
+
+    public Task ShowUpdatesAsync()
+    {
+        Settings.SelectedTab = SettingsViewModel.UpdatesTab;
+        return NavigateAsync(NavPage.Settings);
     }
 
     public Task ShowMeetingAsync(string meetingId)
