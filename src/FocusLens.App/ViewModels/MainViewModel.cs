@@ -6,6 +6,8 @@ using FocusLens.App.Services;
 using FocusLens.App.Services.Dialogs;
 using FocusLens.App.ViewModels.Chat;
 using FocusLens.App.ViewModels.Dashboard;
+using FocusLens.App.ViewModels.Focus;
+using FocusLens.App.Services.Focus;
 using FocusLens.App.ViewModels.Meetings;
 using FocusLens.App.ViewModels.Settings;
 using FocusLens.App.ViewModels.Status;
@@ -19,6 +21,7 @@ namespace FocusLens.App.ViewModels;
 public enum NavPage
 {
     Dashboard,
+    Focus,
     Chat,
     Meetings,
     Settings,
@@ -32,7 +35,7 @@ public sealed partial class MainViewModel : ObservableObject
 
     [ObservableProperty] private ObservableObject? _currentPage;
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsDashboardActive), nameof(IsChatActive), nameof(IsMeetingsActive), nameof(IsSettingsActive))]
+    [NotifyPropertyChangedFor(nameof(IsDashboardActive), nameof(IsFocusActive), nameof(IsChatActive), nameof(IsMeetingsActive), nameof(IsSettingsActive))]
     private NavPage _currentNav = NavPage.Dashboard;
     [ObservableProperty] private bool _isOnboarding;
     [ObservableProperty] private bool _isSidebarCollapsed;
@@ -43,6 +46,7 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty] private bool _showSetupNotice;
 
     public bool IsDashboardActive => CurrentNav == NavPage.Dashboard;
+    public bool IsFocusActive => CurrentNav == NavPage.Focus;
     public bool IsChatActive => CurrentNav == NavPage.Chat;
     public bool IsMeetingsActive => CurrentNav == NavPage.Meetings;
     public bool IsSettingsActive => CurrentNav == NavPage.Settings;
@@ -53,6 +57,9 @@ public sealed partial class MainViewModel : ObservableObject
     partial void OnCurrentNavChanged(NavPage value) => OnPropertyChanged(nameof(ShowBanner));
 
     public DashboardViewModel Dashboard { get; }
+    public FocusViewModel Focus { get; }
+    /// <summary>The floating widget, block overlay and tray timer. Installed once the window exists.</summary>
+    public FocusSurfaces FocusSurfaces { get; }
     public ChatViewModel Chat { get; }
     public MeetingsViewModel Meetings { get; }
     public SettingsViewModel Settings { get; }
@@ -72,11 +79,16 @@ public sealed partial class MainViewModel : ObservableObject
         Meetings = new MeetingsViewModel(services.Meetings, services.MeetingSummarizer, services.MeetingSession, Banner);
         Banner.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(MeetingBannerViewModel.IsVisible)) OnPropertyChanged(nameof(ShowBanner)); };
         Status = new StatusViewModel(services.Health);
+        var focusLive = new FocusLiveViewModel(services.Focus);
+        var focusSettings = new FocusSettingsViewModel(services.Focus.Settings);
+        Focus = new FocusViewModel(services.Focus, focusLive, focusSettings);
+        FocusSurfaces = new FocusSurfaces(services.Focus, focusLive, services.Tray);
         LocalTools = new LocalToolsViewModel(services.Ai, services.Health);
         Settings = new SettingsViewModel(
             new GeneralSettingsViewModel(services.Settings, services.Agent, services.Auth),
             new AppearanceSettingsViewModel(services.Settings),
             new TrackingSettingsViewModel(),
+            focusSettings,
             new PrivacySettingsViewModel(),
             new AiSettingsViewModel(services.Ai, services.Secrets, services.AiClient),
             new MeetingSettingsViewModel(services.Ai),
@@ -143,6 +155,10 @@ public sealed partial class MainViewModel : ObservableObject
             case NavPage.Dashboard:
                 CurrentPage = Dashboard;
                 await Dashboard.LoadAsync();
+                break;
+            case NavPage.Focus:
+                CurrentPage = Focus;
+                Focus.ShowOverview();
                 break;
             case NavPage.Chat:
                 CurrentPage = Chat;

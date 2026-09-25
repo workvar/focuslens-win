@@ -18,21 +18,25 @@ public sealed class OllamaStream : IChatStream
     }
 
     public async IAsyncEnumerable<string> StreamAsync(
-        HttpClient http, string prompt, IReadOnlyList<Message> history,
+        HttpClient http, string prompt, IReadOnlyList<Message> history, AiRequestOptions options,
         [EnumeratorCancellation] CancellationToken ct)
     {
-        if (_model.Length == 0) throw new AiException(AiErrorKind.MissingOllamaModel);
+        var model = (options.OllamaModel ?? _model).Trim();
+        if (model.Length == 0) throw new AiException(AiErrorKind.MissingOllamaModel);
         if (!Uri.TryCreate($"{_host}/api/chat", UriKind.Absolute, out var url))
             throw new AiException(AiErrorKind.Api, $"Invalid Ollama host: {_host}");
 
+        var body = new Dictionary<string, object>
+        {
+            ["model"] = model,
+            ["stream"] = true,
+            ["messages"] = ChatStreamHelpers.ChatMessages(history, prompt),
+        };
+        Apply(options, body);
+
         using var request = new HttpRequestMessage(HttpMethod.Post, url)
         {
-            Content = JsonContent.Create(new
-            {
-                model = _model,
-                stream = true,
-                messages = ChatStreamHelpers.ChatMessages(history, prompt),
-            }),
+            Content = JsonContent.Create(body),
         };
 
         HttpResponseMessage response;
@@ -48,7 +52,7 @@ public sealed class OllamaStream : IChatStream
         using (response)
         {
             if (response.StatusCode == HttpStatusCode.NotFound)
-                throw new AiException(AiErrorKind.OllamaModelMissing, _model);
+                throw new AiException(AiErrorKind.OllamaModelMissing, model);
             ChatStreamHelpers.CheckStatus(response);
 
             await foreach (var line in ChatStreamHelpers.ReadLinesAsync(response, ct))
@@ -71,5 +75,22 @@ public sealed class OllamaStream : IChatStream
                     yield break;
             }
         }
+    }
+
+    /// <summary>
+    /// Ollama's names for the shared request options.
+    ///   num_predict  hard cap on generated tokens
+    ///   think=false  reasoning models (qwen3, deepseek-r1) answer directly instead of
+    ///                generating hundreds of hidden tokens first
+    ///   keep_alive   keeps the model in memory between short requests
+    /// </summary>
+    internal static void Apply(AiRequestOptions options, Dictionary<string, object> body)
+    {
+        var modelOptions = new Dictionary<string, object>();
+        if (options.MaxTokens is { } maxTokens) modelOptions["num_predict"] = maxTokens;
+        if (options.Temperature is { } temperature) modelOptions["temperature"] = temperature;
+        if (modelOptions.Count > 0) body["options"] = modelOptions;
+        if (options.DisableThinking) body["think"] = false;
+        if (options.KeepAlive is { } keepAlive) body["keep_alive"] = keepAlive;
     }
 }

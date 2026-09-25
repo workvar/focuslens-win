@@ -13,6 +13,9 @@ Working towards **v1.0.0** (Phase 1).
 - Velopack auto-update from GitHub Releases and a tag-driven GitHub Actions release pipeline.
 - Update prompt: a tray notification announces new releases, and an Updates tab in Settings shows the notes and downloads only after the user agrees. See [docs/auto-update.md](docs/auto-update.md).
 - Google sign-in through Supabase (PKCE with a loopback redirect).
+- Focus Mode (Phase 3, v1.2.0): set a goal and a length; a patience bar drains while you are off topic, nudges at halfway, then closes the tab or window or blocks it with an overlay. Floating widget, tray timer, allowlist, and saved sessions with insights. See [docs/release-notes/v1.2.0.md](docs/release-notes/v1.2.0.md).
+- Focus Mode performance settings: check interval (default 6 s), pause when away or locked, visual effects (Automatic, Full, Minimal), and an optional separate Ollama model for focus checks.
+- Per-request AI options (token limit, temperature, reasoning off, Ollama keep-alive and model override), used by Focus Mode for one-word answers.
 
 ### Fixed
 - Chat now finds older activity: it searches the newest on-screen text plus keyword matches across 14 days, instead of only the oldest 1500 snapshots in the last 7 days.

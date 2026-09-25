@@ -19,6 +19,9 @@
             <TabItem Header="Data collection">
                 <views:TrackingSettingsPanel DataContext="{Binding Tracking}" />
             </TabItem>
+            <TabItem Header="Focus">
+                <views:FocusSettingsPanel DataContext="{Binding Focus}" />
+            </TabItem>
             <TabItem Header="Privacy">
                 <views:PrivacySettingsPanel DataContext="{Binding Privacy}" />
             </TabItem>

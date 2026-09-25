@@ -1,0 +1,36 @@
+<UserControl x:Class="FocusLens.App.Views.Focus.FocusPerformanceControls"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Name="Root">
+    <!-- How often Focus Mode looks at the screen and how much it animates. The Focus page shows the essentials; Settings shows everything. -->
+    <StackPanel>
+        <TextBlock Text="Check the window every" Margin="0,0,0,4" />
+        <ComboBox ItemsSource="{Binding PollChoices}" DisplayMemberPath="Label" SelectedValuePath="Seconds"
+                  SelectedValue="{Binding PollSeconds}" Width="200" HorizontalAlignment="Left"
+                  AutomationProperties.Name="Check the window every" />
+        <TextBlock Style="{StaticResource FocusCaption}"
+                   Text="Switching windows is noticed right away. This catches tab and page changes inside an app. Longer is lighter; the patience bar still moves every second." />
+
+        <CheckBox Content="Pause checks while I am away" IsChecked="{Binding PauseWhenIdle}" Margin="0,14,0,0" />
+        <TextBlock Style="{StaticResource FocusCaption}"
+                   Text="No checks after a minute without keyboard or mouse, or while the PC is locked or asleep." />
+
+        <TextBlock Text="Visual effects" Margin="0,14,0,4" />
+        <ComboBox ItemsSource="{Binding VisualEffectsChoices}" DisplayMemberPath="Label" SelectedValuePath="Value"
+                  SelectedValue="{Binding VisualEffects}" Width="200" HorizontalAlignment="Left"
+                  AutomationProperties.Name="Visual effects" />
+        <TextBlock Style="{StaticResource FocusCaption}"
+                   Text="Minimal turns off the widget's shadow and ticks the clock once a minute. Automatic does this while battery saver is on or Windows animations are off. Helps most on laptops with integrated graphics." />
+
+        <StackPanel Visibility="{Binding ShowsModel, ElementName=Root, Converter={StaticResource BoolToVisibility}}">
+            <TextBlock Text="Model for focus checks" Margin="0,14,0,4" />
+            <Grid>
+                <TextBox Text="{Binding Model, UpdateSourceTrigger=LostFocus}" AutomationProperties.Name="Model for focus checks" />
+                <TextBlock Text="Same as the AI tab" Style="{StaticResource Muted}" Margin="14,0,0,0" VerticalAlignment="Center"
+                           IsHitTestVisible="False" Visibility="{Binding Model, Converter={StaticResource InvertedNullToVisibility}}" />
+            </Grid>
+            <TextBlock Style="{StaticResource FocusCaption}"
+                       Text="Ollama only. A small model such as llama3.2:1b or qwen2.5:0.5b answers faster and uses far less GPU. Pull it first with ollama pull. Leave empty to use the AI tab's model." />
+        </StackPanel>
+    </StackPanel>
+</UserControl>

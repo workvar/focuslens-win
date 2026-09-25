@@ -9,12 +9,16 @@ public sealed class TrayIconService : IDisposable
     private readonly NotifyIcon _icon;
     private readonly ToolStripMenuItem _pauseItem;
     private readonly ToolStripMenuItem _updateItem;
+    private readonly ToolStripMenuItem _focusItem;
     private Action? _balloonAction;
+    private bool _paused;
+    private string? _focusText;
 
     public event Action? OpenRequested;
     public event Action? PauseToggled;
     public event Action? QuitRequested;
     public event Action? UpdateRequested;
+    public event Action? EndFocusRequested;
 
     public TrayIconService()
     {
@@ -22,9 +26,13 @@ public sealed class TrayIconService : IDisposable
 
         _updateItem = new ToolStripMenuItem("Check for updates", null, (_, _) => UpdateRequested?.Invoke());
 
+        // Shown only while a focus session runs, with the time left in its label.
+        _focusItem = new ToolStripMenuItem("End focus session", null, (_, _) => EndFocusRequested?.Invoke()) { Visible = false };
+
         var menu = new ContextMenuStrip();
         menu.Items.Add(new ToolStripMenuItem("Open FocusLens", null, (_, _) => OpenRequested?.Invoke()));
         menu.Items.Add(_pauseItem);
+        menu.Items.Add(_focusItem);
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(_updateItem);
         menu.Items.Add(new ToolStripMenuItem("Quit", null, (_, _) => QuitRequested?.Invoke()));
@@ -43,12 +51,34 @@ public sealed class TrayIconService : IDisposable
     public void SetPaused(bool paused)
     {
         _pauseItem.Text = paused ? "Resume tracking" : "Pause tracking";
-        _icon.Text = paused ? "FocusLens (paused)" : "FocusLens";
+        _paused = paused;
+        UpdateTooltip();
     }
 
     public void SetUpdateItem(string text) => _updateItem.Text = text;
 
+    /// <summary>Shows the "End focus session" item with <paramref name="text"/>, or hides it when null.</summary>
+    public void SetFocusItem(string? text)
+    {
+        _focusItem.Visible = text is not null;
+        if (text is not null) _focusItem.Text = text;
+    }
+
     public void SetTooltip(string text) => _icon.Text = text.Length > 63 ? text[..63] : text;
+
+    /// <summary>"42m" while a focus session runs and the tray timer is on, otherwise null.</summary>
+    public void SetFocusTime(string? text)
+    {
+        _focusText = text;
+        UpdateTooltip();
+    }
+
+    private void UpdateTooltip()
+    {
+        var text = _paused ? "FocusLens (paused)" : "FocusLens";
+        if (_focusText is not null) text += $", focus: {_focusText} left";
+        SetTooltip(text);
+    }
 
     /// <summary>Shows a balloon; clicking it runs <paramref name="onClick"/>.</summary>
     public void Notify(string title, string message, Action? onClick = null)

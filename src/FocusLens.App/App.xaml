@@ -7,6 +7,8 @@
              xmlns:chat="clr-namespace:FocusLens.App.ViewModels.Chat"
              xmlns:meet="clr-namespace:FocusLens.App.ViewModels.Meetings"
              xmlns:set="clr-namespace:FocusLens.App.ViewModels.Settings"
+             xmlns:focusvm="clr-namespace:FocusLens.App.ViewModels.Focus"
+             xmlns:focusviews="clr-namespace:FocusLens.App.Views.Focus"
              xmlns:views="clr-namespace:FocusLens.App.Views"
              ShutdownMode="OnExplicitShutdown">
     <Application.Resources>
@@ -24,6 +26,7 @@
                 <ResourceDictionary Source="Themes/Sliders.xaml" />
                 <ResourceDictionary Source="Themes/Status.xaml" />
                 <ResourceDictionary Source="Themes/Progress.xaml" />
+                <ResourceDictionary Source="Themes/Focus.xaml" />
             </ResourceDictionary.MergedDictionaries>
 
             <conv:BoolToVisibilityConverter x:Key="BoolToVisibility" />
@@ -38,12 +41,15 @@
             <conv:NotNullToVisibilityConverter x:Key="InvertedNullToVisibility" Invert="True" />
             <conv:CountToVisibilityConverter x:Key="CountToVisibility" />
             <conv:NotConverter x:Key="NotConverter" />
+            <conv:FocusToneToBrushConverter x:Key="FocusTone" />
+            <conv:FocusToneToBrushConverter x:Key="FocusToneSoft" Soft="True" />
 
             <!-- View models map to views through implicit data templates. -->
             <DataTemplate DataType="{x:Type dash:DashboardViewModel}"><views:DashboardView /></DataTemplate>
             <DataTemplate DataType="{x:Type chat:ChatViewModel}"><views:ChatView /></DataTemplate>
             <DataTemplate DataType="{x:Type meet:MeetingsViewModel}"><views:MeetingsView /></DataTemplate>
             <DataTemplate DataType="{x:Type set:SettingsViewModel}"><views:SettingsView /></DataTemplate>
+            <DataTemplate DataType="{x:Type focusvm:FocusViewModel}"><focusviews:FocusView /></DataTemplate>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

@@ -12,20 +12,23 @@ public sealed class ClaudeStream : IChatStream
     public ClaudeStream(string apiKey) => _apiKey = apiKey;
 
     public async IAsyncEnumerable<string> StreamAsync(
-        HttpClient http, string prompt, IReadOnlyList<Message> history,
+        HttpClient http, string prompt, IReadOnlyList<Message> history, AiRequestOptions options,
         [EnumeratorCancellation] CancellationToken ct)
     {
         if (string.IsNullOrEmpty(_apiKey)) throw new AiException(AiErrorKind.MissingApiKey);
 
+        var body = new Dictionary<string, object>
+        {
+            ["model"] = "claude-sonnet-4-6",
+            ["max_tokens"] = options.MaxTokens ?? 1024,
+            ["stream"] = true,
+            ["messages"] = ChatStreamHelpers.ChatMessages(history, prompt),
+        };
+        if (options.Temperature is { } temperature) body["temperature"] = temperature;
+
         using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.anthropic.com/v1/messages")
         {
-            Content = JsonContent.Create(new
-            {
-                model = "claude-sonnet-4-6",
-                max_tokens = 1024,
-                stream = true,
-                messages = ChatStreamHelpers.ChatMessages(history, prompt),
-            }),
+            Content = JsonContent.Create(body),
         };
         request.Headers.Add("x-api-key", _apiKey);
         request.Headers.Add("anthropic-version", "2023-06-01");

@@ -7,8 +7,9 @@ namespace FocusLens.Core.Ai.Streams;
 /// <summary>One provider's streaming chat protocol.</summary>
 public interface IChatStream
 {
+    /// <param name="options">Length, temperature and reasoning limits; see <see cref="AiRequestOptions"/>.</param>
     IAsyncEnumerable<string> StreamAsync(
-        HttpClient http, string prompt, IReadOnlyList<Message> history, CancellationToken ct);
+        HttpClient http, string prompt, IReadOnlyList<Message> history, AiRequestOptions options, CancellationToken ct);
 }
 
 internal static class ChatStreamHelpers

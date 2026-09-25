@@ -1,6 +1,10 @@
 using FocusLens.Core.Chroma;
 using FocusLens.App.Services;
 using FocusLens.App.Services.Auth;
+using FocusLens.App.Services.Focus;
+using FocusLens.Core.Focus;
+using FocusLens.Core.Focus.Classification;
+using FocusLens.Core.Focus.Session;
 using FocusLens.Core.Ai;
 using FocusLens.Core.Ai.Chat;
 using FocusLens.Core.Data;
@@ -10,6 +14,7 @@ using FocusLens.Core.Meetings;
 using FocusLens.Core.Paths;
 using FocusLens.Core.Repositories;
 using FocusLens.Platform.Windows.Audio;
+using FocusLens.Platform.Windows.Focus;
 using FocusLens.Platform.Windows.Shell;
 
 namespace FocusLens.App;
@@ -41,6 +46,9 @@ public sealed class AppServices : IDisposable
     public MeetingPipeline MeetingPipeline { get; }
     public MeetingSummarizer MeetingSummarizer { get; }
     public MeetingDetectionService MeetingDetection { get; }
+
+    /// <summary>Focus Mode: goal, countdown, and the nudge / act / protect ladder. Runs on the UI thread.</summary>
+    public FocusSessionController Focus { get; }
 
     public AppServices(Action<string> openMeeting)
     {
@@ -79,6 +87,14 @@ public sealed class AppServices : IDisposable
         MeetingSession = new MeetingSessionCoordinator(MeetingPipeline);
         MeetingSession.Attach((IMeetingRecorder)MeetingPipeline);
         MeetingDetection = new MeetingDetectionService(MeetingSession, Tray, () => Ai);
+
+        // Judges the foreground window with the same provider chat uses.
+        var focusSettings = FocusSettings.Load();
+        var focusReader = new WindowsFocusContextReader();
+        Focus = new FocusSessionController(
+            new LlmFocusClassifier(AiClient, focusSettings, message => Log.Info(message)),
+            focusSettings, new FocusSessionStore(), focusReader, new WindowsFocusWindowCloser(focusReader),
+            new WindowsFocusActivityWatcher(), new DispatcherFocusScheduler());
     }
 
     /// <summary>Marks meetings a crash left in "recording" as interrupted, on startup.</summary>
@@ -88,6 +104,7 @@ public sealed class AppServices : IDisposable
 
     public void Dispose()
     {
+        Focus.Stop();
         MeetingDetection.Dispose();
         ChromaIndex.Dispose();
         Updates.Dispose();

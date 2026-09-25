@@ -21,7 +21,12 @@ public sealed class StreamingAiClient
     public AiProvider Provider => _providerSource();
 
     public IAsyncEnumerable<string> StreamAsync(
-        string prompt, IReadOnlyList<Message> history, CancellationToken ct = default)
+        string prompt, IReadOnlyList<Message> history, CancellationToken ct = default) =>
+        StreamAsync(prompt, history, AiRequestOptions.Standard, ct);
+
+    /// <summary>Returns token deltas. <paramref name="options"/> limits length and reasoning for short answers.</summary>
+    public IAsyncEnumerable<string> StreamAsync(
+        string prompt, IReadOnlyList<Message> history, AiRequestOptions options, CancellationToken ct = default)
     {
         IChatStream stream = Provider switch
         {
@@ -30,7 +35,7 @@ public sealed class StreamingAiClient
             AiProvider.Ollama l => new OllamaStream(l.Host, l.Model),
             _ => throw new AiException(AiErrorKind.MissingApiKey),
         };
-        return stream.StreamAsync(_http, prompt, history, ct);
+        return stream.StreamAsync(_http, prompt, history, options, ct);
     }
 
     /// <summary>Convenience: collects the whole response.</summary>

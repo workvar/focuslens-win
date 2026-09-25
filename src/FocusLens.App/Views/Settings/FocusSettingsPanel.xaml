@@ -1,0 +1,73 @@
+<UserControl x:Class="FocusLens.App.Views.Settings.FocusSettingsPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:focus="clr-namespace:FocusLens.App.Views.Focus">
+    <!-- Settings tab for Focus Mode. Shares its view model with the Focus page. -->
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel MaxWidth="640" HorizontalAlignment="Left">
+            <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                <StackPanel>
+                    <TextBlock Text="Where the session shows" Style="{StaticResource Heading}" Margin="0,0,0,10" />
+                    <focus:FocusDisplayToggles />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                <StackPanel>
+                    <TextBlock Text="Performance" Style="{StaticResource Heading}" Margin="0,0,0,10" />
+                    <focus:FocusPerformanceControls />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                <StackPanel>
+                    <TextBlock Text="Patience bar" Style="{StaticResource Heading}" Margin="0,0,0,10" />
+                    <Grid>
+                        <TextBlock Text="Time before action" />
+                        <TextBlock Text="{Binding PatienceText}" Style="{StaticResource Muted}" HorizontalAlignment="Right" />
+                    </Grid>
+                    <Slider Minimum="15" Maximum="180" TickFrequency="5" IsSnapToTickEnabled="True" SmallChange="5" LargeChange="15"
+                            Value="{Binding PatienceSeconds}" Margin="0,8,0,0" AutomationProperties.Name="Time before action" />
+                    <TextBlock Style="{StaticResource FocusCaption}"
+                               Text="How long you can stay off topic before the bar empties. You are nudged at the halfway mark. It refills at half speed while you are back on topic." />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                <StackPanel>
+                    <TextBlock Text="When the tab or window closes" Style="{StaticResource Heading}" Margin="0,0,0,10" />
+                    <Grid>
+                        <TextBlock Text="Warning countdown" />
+                        <TextBlock Text="{Binding CountdownText}" Style="{StaticResource Muted}" HorizontalAlignment="Right" />
+                    </Grid>
+                    <Slider Minimum="3" Maximum="15" TickFrequency="1" IsSnapToTickEnabled="True" SmallChange="1" LargeChange="3"
+                            Value="{Binding CountdownSeconds}" Margin="0,8,0,0" AutomationProperties.Name="Warning countdown" />
+                    <TextBlock Style="{StaticResource FocusCaption}"
+                               Text="In Close mode, how long the on-screen warning shows before the tab or window is closed." />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                <StackPanel>
+                    <TextBlock Text="Never treat as a distraction" Style="{StaticResource Heading}" Margin="0,0,0,10" />
+                    <Grid>
+                        <TextBox Text="{Binding Allowlist, UpdateSourceTrigger=LostFocus}" AcceptsReturn="True" MinHeight="60"
+                                 TextWrapping="Wrap" AutomationProperties.Name="Never treat as a distraction" />
+                        <TextBlock Text="Code, learn.microsoft.com" Style="{StaticResource Muted}" Margin="14,9,0,0" VerticalAlignment="Top"
+                                   IsHitTestVisible="False" Visibility="{Binding Allowlist, Converter={StaticResource InvertedNullToVisibility}}" />
+                    </Grid>
+                    <TextBlock Style="{StaticResource FocusCaption}"
+                               Text="Apps or sites, separated by commas. Use the app name (Visual Studio Code), its program name (code.exe or code), or a site (learn.microsoft.com)." />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Text="How it decides" Style="{StaticResource Heading}" Margin="0,0,0,10" />
+                    <TextBlock Style="{StaticResource Muted}"
+                               Text="The model you chose in the AI tab judges each window against your goal. With Ollama, nothing leaves this PC. If the model cannot be reached, nothing is closed." />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

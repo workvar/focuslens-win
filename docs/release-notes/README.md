@@ -8,7 +8,7 @@ One file per release, named `vX.Y.Z.md`. The release workflow publishes `docs/re
 |---|---|---|
 | 1 Foundations | 1.0.0 | [v1.0.0.md](v1.0.0.md) |
 | 2 Memory and polish | 1.1.0 | [v1.1.0.md](v1.1.0.md) (draft, phase not complete) |
-| 3 Focus tools | 1.2.0 | to be written when the phase completes |
+| 3 Focus tools | 1.2.0 | [v1.2.0.md](v1.2.0.md) (draft, not yet verified on a PC) |
 | 4 Intelligence | 1.3.0 | to be written when the phase completes |
 
 Patch releases (1.0.1, 1.0.2) carry fixes only and get a short notes file of their own. Pre-release tags such as `v1.0.0-beta.1` reuse the notes of their base version.

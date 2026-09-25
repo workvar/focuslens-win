@@ -1,0 +1,40 @@
+<UserControl x:Class="FocusLens.App.Views.Focus.FocusSessionsList"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:fc="clr-namespace:FocusLens.App.Controls.Focus">
+    <!-- Every saved session, newest first. Pick one to see its insights. -->
+    <Border Style="{StaticResource Card}">
+        <StackPanel>
+            <TextBlock Text="Past sessions" Style="{StaticResource FocusSectionLabel}" />
+            <TextBlock Style="{StaticResource Muted}" Margin="0,4"
+                       Text="Your finished sessions will show up here, with a score and what pulled you away."
+                       Visibility="{Binding HasSessions, Converter={StaticResource InvertedBoolToVisibility}}" />
+            <ItemsControl ItemsSource="{Binding Sessions}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Button Style="{StaticResource FocusRowButton}" Margin="0,1" AutomationProperties.Name="{Binding Goal}"
+                                Command="{Binding DataContext.OpenCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                CommandParameter="{Binding}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <fc:ScoreRing Score="{Binding Score}" Width="42" Height="42" Thickness="5" />
+                                <StackPanel Grid.Column="1" Margin="14,0" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Goal}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
+                                    <TextBlock Text="{Binding When}" Style="{StaticResource Muted}" FontSize="12" />
+                                </StackPanel>
+                                <TextBlock Grid.Column="2" Text="{Binding DistractionsText}" Style="{StaticResource Muted}" FontSize="12" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="3" Text="&#xE76C;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource TextMutedBrush}"
+                                           FontSize="12" VerticalAlignment="Center" Margin="10,0,0,0" />
+                            </Grid>
+                        </Button>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+    </Border>
+</UserControl>

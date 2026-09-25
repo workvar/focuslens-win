@@ -43,6 +43,7 @@ public partial class App : Application
         _main = new MainViewModel(_services);
         _window = new MainWindow { DataContext = _main };
         ThemeManager.Attach(_window);
+        _main.FocusSurfaces.Install();
         _window.StateChanged += (_, _) => { if (_window.WindowState == WindowState.Minimized) _window.Hide(); };
         _window.Closing += (_, args) =>
         {

@@ -102,6 +102,13 @@
                                 <TextBlock Text="Dashboard" Margin="8,0,0,0" Visibility="{Binding DataContext.IsSidebarCollapsed, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource InvertedBoolToVisibility}}" />
                             </StackPanel>
                         </Button>
+                        <Button Style="{StaticResource NavButton}" Tag="{Binding IsFocusActive}"
+                                Command="{Binding NavigateCommand}" CommandParameter="{x:Static vm:NavPage.Focus}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE916;" FontFamily="Segoe MDL2 Assets" Width="24" />
+                                <TextBlock Text="Focus" Margin="8,0,0,0" Visibility="{Binding DataContext.IsSidebarCollapsed, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource InvertedBoolToVisibility}}" />
+                            </StackPanel>
+                        </Button>
                         <Button Style="{StaticResource NavButton}" Tag="{Binding IsChatActive}"
                                 Command="{Binding NewChatCommand}">
                             <StackPanel Orientation="Horizontal">

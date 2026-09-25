@@ -13,19 +13,23 @@ public sealed class OpenAiStream : IChatStream
     public OpenAiStream(string apiKey) => _apiKey = apiKey;
 
     public async IAsyncEnumerable<string> StreamAsync(
-        HttpClient http, string prompt, IReadOnlyList<Message> history,
+        HttpClient http, string prompt, IReadOnlyList<Message> history, AiRequestOptions options,
         [EnumeratorCancellation] CancellationToken ct)
     {
         if (string.IsNullOrEmpty(_apiKey)) throw new AiException(AiErrorKind.MissingApiKey);
 
+        var body = new Dictionary<string, object>
+        {
+            ["model"] = "gpt-4o-mini",
+            ["stream"] = true,
+            ["messages"] = ChatStreamHelpers.ChatMessages(history, prompt),
+        };
+        if (options.MaxTokens is { } maxTokens) body["max_tokens"] = maxTokens;
+        if (options.Temperature is { } temperature) body["temperature"] = temperature;
+
         using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.openai.com/v1/chat/completions")
         {
-            Content = JsonContent.Create(new
-            {
-                model = "gpt-4o-mini",
-                stream = true,
-                messages = ChatStreamHelpers.ChatMessages(history, prompt),
-            }),
+            Content = JsonContent.Create(body),
         };
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
 
