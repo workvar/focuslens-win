@@ -25,7 +25,11 @@ public static class PromptBuilder
                           "Windows PC usage using ONLY the data below. Reply in clear markdown (you may use **bold**, " +
                           "lists, and short fenced code blocks). Use specific numbers (hours, minutes, percentages). " +
                           "Do not invent activity that is not in the data. Use SESSION CONTEXT to say what the user " +
-                          "read, wrote, or discussed, and give the exact URL when they ask for a link. " + mode);
+                          "read, wrote, or discussed, and give the exact URL when they ask for a link. " +
+                          "Answer ONLY the latest question and never repeat or restate an earlier answer. " +
+                          "If the data does not contain what was asked, say so in one or two sentences, mention what was " +
+                          "searched (see SEARCH NOTE) and what could be missing, for example that the app's text is not " +
+                          "being captured. Never fall back to a generic list of apps or a focus score unless asked. " + mode);
         prompt.AppendLine();
         prompt.AppendLine($"TIME PERIOD: {context.PeriodLabel} ({context.SummaryCount} days of data)");
         prompt.AppendLine();
@@ -34,6 +38,8 @@ public static class PromptBuilder
         prompt.AppendLine("DAILY FOCUS SCORES:").AppendLine(OrNone(scoreLines, "  No data available")).AppendLine();
         prompt.AppendLine("ACTIVITY DETAIL (window titles / sites, with time spent):")
             .AppendLine(OrNone(BuildDetailBlock(context), "  No detailed activity recorded")).AppendLine();
+        prompt.AppendLine("SEARCH NOTE (what was looked up for this question):")
+            .AppendLine(OrNone(context.RetrievalNote, "  No search performed")).AppendLine();
         prompt.AppendLine("SESSION CONTEXT (text that appeared on screen, grouped by session, oldest first; each session " +
                           "lists only text that newly appeared during it; sessions marked background were visible but " +
                           "not focused, so they do not count as focused time):")

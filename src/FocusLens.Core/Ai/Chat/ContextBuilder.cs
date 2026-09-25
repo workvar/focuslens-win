@@ -61,20 +61,16 @@ public sealed class ContextBuilder
             catch { /* signals are optional context */ }
         }
 
-        if (!allowed.IsOn(TrackingItem.SendScreenTextToAi)) return context;
+        if (!allowed.IsOn(TrackingItem.SendScreenTextToAi))
+        {
+            context.RetrievalNote = "  Sharing on-screen text with the AI is switched off in Settings, so no app text can be searched.";
+            return context;
+        }
 
-        var screen = new ScreenTextRepository(_repository.Database);
         try
         {
-            var snapshots = await screen.SnapshotsAsync(start, end);
-            if (snapshots.Count > 0)
-            {
-                var urls = await screen.UrlsAsync(start, end);
-                var notes = SessionBuilder.Build(snapshots, urls);
-                context.SessionContext = SessionRetriever.Render(notes, question);
-            }
-            var tabs = await screen.OpenTabsAsync(start, end);
-            context.OpenTabs = TabsRenderer.Render(tabs, question);
+            await ScreenContextBuilder.FillAsync(
+                new ScreenTextRepository(_repository.Database), context, question, start, end);
         }
         catch { /* screen text is optional context */ }
         return context;

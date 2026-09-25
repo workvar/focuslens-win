@@ -4,7 +4,7 @@ using System.Text;
 namespace FocusLens.Platform.Windows.Native;
 
 /// <summary>Win32 window, input and clipboard calls.</summary>
-internal static class User32
+internal static partial class User32
 {
     public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
     public delegate IntPtr HookProc(int nCode, IntPtr wParam, IntPtr lParam);

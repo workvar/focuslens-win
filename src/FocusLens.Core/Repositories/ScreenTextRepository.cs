@@ -4,22 +4,24 @@ using FocusLens.Core.Data;
 namespace FocusLens.Core.Repositories;
 
 /// <summary>Reads on-screen text snapshots, page URLs and open tabs for the AI context.</summary>
-public sealed class ScreenTextRepository
+public sealed partial class ScreenTextRepository
 {
     private readonly Db _db;
 
     public ScreenTextRepository(Db db) => _db = db;
 
+    /// <summary>The newest snapshots in the window (oldest first), so a long range never drops recent activity.</summary>
     public Task<IReadOnlyList<ScreenTextSnapshot>> SnapshotsAsync(DateTime from, DateTime to, int limit = 1500) =>
-        Task.Run<IReadOnlyList<ScreenTextSnapshot>>(() => _db.Query<SnapshotRow>(@"
+        Task.Run<IReadOnlyList<ScreenTextSnapshot>>(() => ToSnapshots(_db.Query<SnapshotRow>(@"
             SELECT timestamp AS Timestamp, app_bundle_id AS AppId, app_name AS AppName,
                    window_title AS Title, ocr_text AS Text, focus_state AS FocusState
             FROM screenshots
             WHERE timestamp >= @from AND timestamp <= @to AND ocr_text IS NOT NULL AND ocr_text != ''
-            ORDER BY timestamp ASC
-            LIMIT @limit", new { from, to, limit })
-            .Select(r => new ScreenTextSnapshot(r.Timestamp, r.AppId, r.AppName, r.Title, r.Text, r.FocusState == "background"))
-            .ToList());
+            ORDER BY timestamp DESC
+            LIMIT @limit", new { from, to, limit })).OrderBy(s => s.Timestamp).ToList());
+
+    private static IEnumerable<ScreenTextSnapshot> ToSnapshots(IEnumerable<SnapshotRow> rows) =>
+        rows.Select(r => new ScreenTextSnapshot(r.Timestamp, r.AppId, r.AppName, r.Title, r.Text, r.FocusState == "background"));
 
     /// <summary>Most common URL per (app, window title), keyed for SessionBuilder.</summary>
     public Task<Dictionary<string, string>> UrlsAsync(DateTime from, DateTime to) =>

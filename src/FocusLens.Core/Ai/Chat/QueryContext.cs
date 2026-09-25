@@ -19,4 +19,6 @@ public sealed class QueryContext
     public string SessionContext { get; set; } = "";
     public string OpenTabs { get; set; } = "";
     public string Signals { get; set; } = "";
+    /// <summary>What the on-screen text search looked for and found, so the model can say so plainly.</summary>
+    public string RetrievalNote { get; set; } = "";
 }

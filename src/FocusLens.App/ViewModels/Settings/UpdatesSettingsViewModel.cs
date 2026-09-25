@@ -32,7 +32,7 @@ public sealed partial class UpdatesSettingsViewModel : ObservableObject
         : State.Status switch
         {
             UpdateStatus.Checking => "Checking for updates...",
-            UpdateStatus.UpToDate => "You are up to date.",
+            UpdateStatus.UpToDate => $"You are on the latest version ({CurrentVersion}).",
             UpdateStatus.Available => $"FocusLens {State.Version} is available.",
             UpdateStatus.Downloading => $"Downloading {State.Version}... {State.Progress}%",
             UpdateStatus.Ready => $"{State.Version} is downloaded. Restart to finish updating.",

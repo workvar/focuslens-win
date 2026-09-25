@@ -37,3 +37,16 @@ Existing installs update automatically in the background and apply the update on
 ```
 
 Rules: describe what the user can now do, not which files changed; list known issues honestly; do not use unreleased items.
+
+## Test builds
+
+Tags before 1.0.0 were cut to test the release pipeline and the updater. Each has its own notes file.
+
+| Tag | Notes file | What it is |
+|---|---|---|
+| v0.0.1 | [v0.0.1.md](v0.0.1.md) | First build with Velopack auto-update |
+| v0.0.2 | [v0.0.2.md](v0.0.2.md) | Same code as v0.0.1 (see note below) |
+| v0.0.3 | [v0.0.3.md](v0.0.3.md) | Dark mode and dashboard fixes |
+| v0.0.4 | [v0.0.4.md](v0.0.4.md) | Readable controls, recording controls, Permissions, Local tools setup |
+
+The v0.0.2 tag points at the same commit as v0.0.1, so `v0.0.2.md` describes changes that first shipped in v0.0.3.

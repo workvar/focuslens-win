@@ -13,6 +13,8 @@ public sealed class UpdateService : IDisposable
     private const string RepoUrl = "https://github.com/workvar/focuslens-win";
     private static readonly TimeSpan StartupDelay = TimeSpan.FromSeconds(30);
     private static readonly TimeSpan CheckInterval = TimeSpan.FromHours(4);
+    /// <summary>Checks closer together than this reuse the last result instead of calling GitHub again.</summary>
+    private static readonly TimeSpan MinCheckGap = TimeSpan.FromSeconds(10);
 
     private readonly UpdateManager _manager = new(new GithubSource(RepoUrl, null, false));
     private readonly SemaphoreSlim _gate = new(1, 1);
@@ -20,6 +22,7 @@ public sealed class UpdateService : IDisposable
     private CancellationTokenSource? _cts;
     private UpdateInfo? _info;
     private VelopackAsset? _ready;
+    private DateTimeOffset _lastCheckAt = DateTimeOffset.MinValue;
 
     public UpdateService(Action<string, Exception> logError) => _logError = logError;
 
@@ -48,6 +51,9 @@ public sealed class UpdateService : IDisposable
         await _gate.WaitAsync();
         try
         {
+            if (DateTimeOffset.UtcNow - _lastCheckAt < MinCheckGap) return;
+            _lastCheckAt = DateTimeOffset.UtcNow;
+
             SetState(new(UpdateStatus.Checking));
             var info = await _manager.CheckForUpdatesAsync();
             if (info is null)
@@ -63,7 +69,7 @@ public sealed class UpdateService : IDisposable
         catch (Exception ex)
         {
             _logError("Update check failed", ex);
-            SetState(new(UpdateStatus.Failed, Error: "Could not reach GitHub. Check your connection and try again."));
+            SetState(new(UpdateStatus.Failed, Error: UpdateErrors.Describe(ex)));
         }
         finally
         {

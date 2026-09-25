@@ -29,7 +29,8 @@ public sealed class AiQueryService
     {
         var context = await _contextBuilder.BuildAsync(userMessage);
         var prompt = PromptBuilder.BuildStreamingPrompt(userMessage, context);
-        var recent = await _store.RecentMessagesForContextAsync(conversation.Id, budgetTokens: 6000);
+        var recent = HistoryTrimmer.Trim(
+            await _store.RecentMessagesForContextAsync(conversation.Id, budgetTokens: 6000), userMessage);
 
         var prose = new System.Text.StringBuilder();
         var stream = _client.StreamAsync(prompt, recent, ct).GetAsyncEnumerator(ct);

@@ -29,6 +29,8 @@ Updates only work in the installed app. A run from source or a portable build sh
 
 The background loop stops checking once a release has been found, so a newer release published afterwards is picked up on the next launch or a manual **Check for updates**.
 
+Checks are throttled: a check that starts within 10 seconds of the previous one is skipped and the last result stays on screen, so repeated clicks never hit GitHub more than once per 10 seconds.
+
 The feed is `https://github.com/workvar/focuslens-win`. Change `RepoUrl` in `UpdateService.cs` if the repository moves.
 
 ## Publishing an update
@@ -49,6 +51,8 @@ The workflow passes the same `docs/release-notes/vX.Y.Z.md` to `vpk pack --relea
 ## Troubleshooting
 
 - **"Only available in the installed app":** run the installer rather than the build output.
+- **"found no release feed" (404):** the repository is private or the latest release has no Velopack files. The unauthenticated GitHub source needs a public repo.
+- **"limiting requests" (403 or 429):** GitHub rate limits unauthenticated calls per IP. Wait and retry.
 - **"Could not reach GitHub":** check the network and that the latest release has the Velopack files (`RELEASES`, `.nupkg`, `Setup.exe`) attached.
 - **What's new is empty:** the release was packed without a notes file for that version.
 - Errors are written to the app log (`Update check failed`, `Update download failed`).

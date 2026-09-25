@@ -32,6 +32,13 @@ public static class DateRangeDetector
         return (now.AddDays(-7), now, "the last 7 days");
     }
 
+    /// <summary>True when the question names a period; otherwise the default 7 days was assumed.</summary>
+    public static bool HasExplicitRange(string question)
+    {
+        var q = question.ToLowerInvariant();
+        return q.Contains("today") || q.Contains("yesterday") || q.Contains("week") || q.Contains("month");
+    }
+
     private static DateTime StartOfWeek(DateTime day)
     {
         var offset = ((int)day.DayOfWeek + 6) % 7; // Monday start

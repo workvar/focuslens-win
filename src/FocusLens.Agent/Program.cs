@@ -35,7 +35,7 @@ try
     var signalStore = new SignalStore(db, log);
     var screenshotStore = new ScreenshotStore(db, log);
     var tabStore = new TabStore(db, log);
-    var textReader = new ScreenTextReader();
+    var textReader = new ScreenTextReader(log);
     if (!textReader.CanOcr) log.Warn("Windows OCR is unavailable; screen text falls back to UI Automation only");
 
     using var writer = new BatchWriter(db, privacy, log);

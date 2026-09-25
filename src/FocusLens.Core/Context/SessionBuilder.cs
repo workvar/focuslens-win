@@ -7,8 +7,8 @@ namespace FocusLens.Core.Context;
 public static class SessionBuilder
 {
     public static readonly TimeSpan MaxGap = TimeSpan.FromMinutes(5);
-    public const int MaxLinesPerSession = 80;
-    public const int MinLineLength = 12;
+    public const int MaxLinesPerSession = 200;
+    public const int MinLineLength = 8;
 
     public static string Key(string appId, string? title) => appId + "|" + (title ?? "");
 
