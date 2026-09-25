@@ -201,11 +201,7 @@
                             <TextBlock Text="Recent chats" Style="{StaticResource Muted}" FontSize="12" VerticalAlignment="Center" />
                             <Button Content="&#xE710;" FontFamily="Segoe MDL2 Assets" Style="{StaticResource IconButton}"
                                     HorizontalAlignment="Right" Padding="4" AutomationProperties.Name="New chat"
-                                    Command="{Binding NewChatCommand}">
-                                <Button.ToolTip>
-                                    <ToolTip Content="New chat" />
-                                </Button.ToolTip>
-                            </Button>
+                                    Command="{Binding NewChatCommand}" ToolTip="New chat" />
                         </Grid>
                         <ListBox ItemsSource="{Binding RecentConversations}" SelectedItem="{Binding SelectedConversation, Mode=OneWay}"
                                  HorizontalContentAlignment="Stretch" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
