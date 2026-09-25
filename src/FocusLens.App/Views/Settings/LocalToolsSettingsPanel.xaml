@@ -1,0 +1,73 @@
+<UserControl x:Class="FocusLens.App.Views.Settings.LocalToolsSettingsPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Resources>
+        <!-- One card per component. Shows status, progress while installing, errors, and the install actions. -->
+        <DataTemplate x:Key="ToolCard">
+            <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="{Binding Name}" Style="{StaticResource Heading}" />
+                        <Border Grid.Column="1" CornerRadius="10" Padding="8,1">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsReady}" Value="True">
+                                            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <TextBlock Text="{Binding StatusLabel}" FontSize="12" FontWeight="SemiBold" />
+                        </Border>
+                    </Grid>
+                    <TextBlock Text="{Binding Description}" Style="{StaticResource Muted}" Margin="0,4,0,0" />
+                    <TextBlock Text="{Binding Detail}" Margin="0,6,0,0" FontSize="12" />
+
+                    <StackPanel Margin="0,12,0,0" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}">
+                        <ProgressBar Value="{Binding Progress, Mode=OneWay}" IsIndeterminate="{Binding IsIndeterminate}"
+                                     AutomationProperties.Name="Setup progress" />
+                        <TextBlock Text="{Binding Message}" Style="{StaticResource Muted}" FontSize="12" Margin="0,6,0,0"
+                                   AutomationProperties.LiveSetting="Polite" />
+                    </StackPanel>
+                    <TextBlock Text="{Binding Error}" Foreground="{DynamicResource DangerBrush}" FontSize="12" Margin="0,8,0,0"
+                               Visibility="{Binding Error, Converter={StaticResource NotNullToVisibility}}" />
+
+                    <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                        <Button Content="{Binding InstallLabel}" Style="{StaticResource PrimaryButton}" Command="{Binding InstallCommand}"
+                                Visibility="{Binding CanInstall, Converter={StaticResource BoolToVisibility}}" />
+                        <Button Content="Cancel" Command="{Binding CancelCommand}"
+                                Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
+                        <Button Content="Install manually" Margin="8,0,0,0" Command="{Binding OpenManualCommand}"
+                                Visibility="{Binding ManualUrl, Converter={StaticResource NotNullToVisibility}}" />
+                        <Button Content="Check again" Margin="8,0,0,0" Command="{Binding RecheckCommand}"
+                                IsEnabled="{Binding IsBusy, Converter={StaticResource NotConverter}}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel MaxWidth="640" HorizontalAlignment="Left">
+            <TextBlock Style="{StaticResource Muted}" Margin="0,0,0,12"
+                       Text="FocusLens can run its AI and search index entirely on this PC. If you already have Ollama or Chroma DB, nothing here changes. If not, you can set them up below; nothing is downloaded until you confirm." />
+
+            <ContentControl Content="{Binding Ollama}" ContentTemplate="{StaticResource ToolCard}" />
+
+            <ContentControl Content="{Binding Model}" ContentTemplate="{StaticResource ToolCard}" />
+            <StackPanel Margin="0,-4,0,12">
+                <TextBlock Text="Model to download (type to search suggestions or enter any Ollama model name)" Style="{StaticResource Muted}" FontSize="12" />
+                <ComboBox IsEditable="True" ItemsSource="{Binding SuggestedModels}" Text="{Binding ModelName, UpdateSourceTrigger=PropertyChanged}"
+                          Margin="0,4,0,0" AutomationProperties.Name="Model to download" />
+            </StackPanel>
+
+            <ContentControl Content="{Binding Chroma}" ContentTemplate="{StaticResource ToolCard}" />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

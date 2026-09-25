@@ -31,6 +31,12 @@
             <TabItem Header="Status">
                 <views:StatusSettingsPanel DataContext="{Binding Status}" />
             </TabItem>
+            <TabItem Header="Permissions">
+                <views:PermissionsSettingsPanel DataContext="{Binding Permissions}" />
+            </TabItem>
+            <TabItem Header="Local tools">
+                <views:LocalToolsSettingsPanel DataContext="{Binding LocalTools}" />
+            </TabItem>
             <TabItem Header="Updates">
                 <views:UpdatesSettingsPanel DataContext="{Binding Updates}" />
             </TabItem>

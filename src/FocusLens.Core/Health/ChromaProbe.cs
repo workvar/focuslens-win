@@ -40,12 +40,12 @@ public sealed class ChromaProbe : IHealthProbe
 
         var run = await PythonRunner.RunAsync(Script, env, ct);
         if (!run.Started)
-            return ServiceHealth.Disconnected(Name, "Python 3 was not found. Install it from python.org, then run: pip install chromadb");
+            return ServiceHealth.Disconnected(Name, "Python 3 was not found. Set it up under Settings > Local tools, or install it from python.org");
         if (run.ExitCode != 0 || !TryParse(run.Output, out var info))
             return ServiceHealth.Disconnected(Name, "The Chroma store could not be opened. It may be locked or damaged");
 
         if (!info.GetProperty("package").GetBoolean())
-            return ServiceHealth.Disconnected(Name, "The chromadb package is missing. Run: pip install chromadb");
+            return ServiceHealth.Disconnected(Name, "The chromadb package is missing. Set it up under Settings > Local tools");
 
         var version = info.GetProperty("version").GetString();
         if (!info.GetProperty("store").GetBoolean())

@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FocusLens.Core.Ai;
@@ -18,6 +19,11 @@ public sealed partial class AiSettingsViewModel : ObservableObject
     [ObservableProperty] private bool _hasOpenAiKey;
     [ObservableProperty] private string? _testResult;
     [ObservableProperty] private bool _isTesting;
+    [ObservableProperty] private bool _isLoadingModels;
+    [ObservableProperty] private string? _modelsHint;
+
+    /// <summary>Models installed in Ollama, for the searchable dropdown. Free text is still accepted.</summary>
+    public ObservableCollection<string> AvailableModels { get; } = new();
 
     public IReadOnlyList<string> Providers { get; } = new[] { "Ollama (local, private)", "Claude", "OpenAI" };
     public bool IsOllama => ProviderIndex == 0;
@@ -40,6 +46,7 @@ public sealed partial class AiSettingsViewModel : ObservableObject
         _ollamaModel = settings.OllamaModel;
         _hasClaudeKey = !string.IsNullOrEmpty(secrets.Get(AiSettings.SecretNames.Claude));
         _hasOpenAiKey = !string.IsNullOrEmpty(secrets.Get(AiSettings.SecretNames.OpenAi));
+        _ = RefreshModelsAsync();
     }
 
     partial void OnProviderIndexChanged(int value)
@@ -51,9 +58,15 @@ public sealed partial class AiSettingsViewModel : ObservableObject
         OnPropertyChanged(nameof(IsOpenAi));
         OnPropertyChanged(nameof(IsCloud));
         TestResult = null;
+        if (value == 0) _ = RefreshModelsAsync();
     }
 
-    partial void OnOllamaHostChanged(string value) { _settings.OllamaHost = value; _settings.Save(); }
+    partial void OnOllamaHostChanged(string value)
+    {
+        _settings.OllamaHost = value;
+        _settings.Save();
+        _ = RefreshModelsAsync();
+    }
     partial void OnOllamaModelChanged(string value) { _settings.OllamaModel = value; _settings.Save(); }
 
     /// <summary>Called from the password boxes, which cannot bind their content.</summary>
@@ -67,6 +80,27 @@ public sealed partial class AiSettingsViewModel : ObservableObject
     {
         _secrets.Set(AiSettings.SecretNames.OpenAi, key.Trim());
         HasOpenAiKey = key.Trim().Length > 0;
+    }
+
+    /// <summary>Asks the running Ollama which models are installed. Safe to call any time; failures just empty the list.</summary>
+    [RelayCommand]
+    public async Task RefreshModelsAsync()
+    {
+        if (IsLoadingModels) return;
+        IsLoadingModels = true;
+        try
+        {
+            var models = await new OllamaClient(OllamaHost).ListModelsAsync();
+            AvailableModels.Clear();
+            foreach (var model in models) AvailableModels.Add(model);
+            ModelsHint = models.Count > 0
+                ? $"{models.Count} installed. Type to search."
+                : "No models found. Make sure Ollama is running, or set it up under Settings > Local tools.";
+        }
+        finally
+        {
+            IsLoadingModels = false;
+        }
     }
 
     [RelayCommand]

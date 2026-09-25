@@ -3,12 +3,16 @@ using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FocusLens.App.Services;
+using FocusLens.App.Services.Dialogs;
 using FocusLens.App.ViewModels.Chat;
 using FocusLens.App.ViewModels.Dashboard;
 using FocusLens.App.ViewModels.Meetings;
 using FocusLens.App.ViewModels.Settings;
 using FocusLens.App.ViewModels.Status;
 using FocusLens.Core.Models;
+using FocusLens.Core.Permissions;
+using FocusLens.Platform.Windows.Permissions;
+using FocusLens.App.Services.Permissions;
 
 namespace FocusLens.App.ViewModels;
 
@@ -36,11 +40,17 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty] private string _agentStatusText = "";
     [ObservableProperty] private Conversation? _selectedConversation;
     [ObservableProperty] private string? _restrictionNotice;
+    [ObservableProperty] private bool _showSetupNotice;
 
     public bool IsDashboardActive => CurrentNav == NavPage.Dashboard;
     public bool IsChatActive => CurrentNav == NavPage.Chat;
     public bool IsMeetingsActive => CurrentNav == NavPage.Meetings;
     public bool IsSettingsActive => CurrentNav == NavPage.Settings;
+
+    /// <summary>The Meetings page has its own recording controls, so the strip would only duplicate them there.</summary>
+    public bool ShowBanner => Banner.IsVisible && CurrentNav != NavPage.Meetings;
+
+    partial void OnCurrentNavChanged(NavPage value) => OnPropertyChanged(nameof(ShowBanner));
 
     public DashboardViewModel Dashboard { get; }
     public ChatViewModel Chat { get; }
@@ -48,6 +58,7 @@ public sealed partial class MainViewModel : ObservableObject
     public SettingsViewModel Settings { get; }
     public StatusViewModel Status { get; }
     public MeetingBannerViewModel Banner { get; }
+    public LocalToolsViewModel LocalTools { get; }
     public OnboardingViewModel Onboarding { get; }
     public ObservableCollection<Conversation> Conversations { get; } = new();
 
@@ -57,9 +68,11 @@ public sealed partial class MainViewModel : ObservableObject
 
         Dashboard = new DashboardViewModel(services.Activity);
         Chat = new ChatViewModel(services.Conversations, services.Query);
-        Meetings = new MeetingsViewModel(services.Meetings, services.MeetingSummarizer, services.MeetingSession);
         Banner = new MeetingBannerViewModel(services.MeetingSession, services.MeetingDetection);
+        Meetings = new MeetingsViewModel(services.Meetings, services.MeetingSummarizer, services.MeetingSession, Banner);
+        Banner.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(MeetingBannerViewModel.IsVisible)) OnPropertyChanged(nameof(ShowBanner)); };
         Status = new StatusViewModel(services.Health);
+        LocalTools = new LocalToolsViewModel(services.Ai, services.Health);
         Settings = new SettingsViewModel(
             new GeneralSettingsViewModel(services.Settings, services.Agent, services.Auth),
             new AppearanceSettingsViewModel(services.Settings),
@@ -68,8 +81,17 @@ public sealed partial class MainViewModel : ObservableObject
             new AiSettingsViewModel(services.Ai, services.Secrets, services.AiClient),
             new MeetingSettingsViewModel(services.Ai),
             Status,
+            new PermissionsViewModel(new IPermissionCheck[]
+            {
+                new MicrophonePermission(), new SpeechRecognizerPermission(), new ScreenTextPermission(),
+                new NotificationsPermission(), new AgentPermission(services.Agent), new StartupPermission(services.Agent, services.Settings),
+            }),
+            LocalTools,
             new UpdatesSettingsViewModel(services.Updates));
         Onboarding = new OnboardingViewModel(services, CompleteOnboarding);
+
+        LocalTools.Changed += () => UiThread.Post(() => { _ = Settings.Ai.RefreshModelsAsync(); UpdateSetupNotice(); });
+        LocalTools.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(LocalToolsViewModel.NeedsSetup)) UpdateSetupNotice(); };
 
         IsOnboarding = !services.Settings.OnboardingCompleted;
         IsSidebarCollapsed = services.Settings.SidebarCollapsed;
@@ -98,6 +120,7 @@ public sealed partial class MainViewModel : ObservableObject
         _services.Settings.OnboardingCompleted = true;
         _services.Settings.Save();
         IsOnboarding = false;
+        UpdateSetupNotice();
         _services.Agent.SetAutoStart(_services.Settings.StartWithWindows);
         _services.Agent.Start();
         _ = Dashboard.LoadAsync();
@@ -131,6 +154,24 @@ public sealed partial class MainViewModel : ObservableObject
                 Settings.General.RefreshAgentStatus();
                 break;
         }
+    }
+
+    private void UpdateSetupNotice() =>
+        ShowSetupNotice = LocalTools.NeedsSetup && !_services.Settings.SetupPromptDismissed && !IsOnboarding;
+
+    [RelayCommand]
+    private Task OpenSetupAsync()
+    {
+        Settings.SelectedTab = SettingsViewModel.LocalToolsTab;
+        return NavigateAsync(NavPage.Settings);
+    }
+
+    [RelayCommand]
+    private void DismissSetup()
+    {
+        _services.Settings.SetupPromptDismissed = true;
+        _services.Settings.Save();
+        UpdateSetupNotice();
     }
 
     public Task ShowUpdatesAsync()
@@ -167,6 +208,7 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand]
     private async Task DeleteConversationAsync(Conversation conversation)
     {
+        if (!ConfirmDialog.AskDeleteChat(conversation.Title)) return;
         await _services.Conversations.DeleteAsync(conversation.Id);
         if (Chat.Conversation?.Id == conversation.Id) await Chat.StartNewAsync();
     }

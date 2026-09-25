@@ -11,6 +11,9 @@
     <SolidColorBrush x:Key="AccentHoverBrush" Color="{DynamicResource AccentHoverColor}" />
     <SolidColorBrush x:Key="AccentTextBrush" Color="{DynamicResource AccentTextColor}" />
     <SolidColorBrush x:Key="AccentSoftBrush" Color="{DynamicResource AccentSoftColor}" />
+    <SolidColorBrush x:Key="ControlBorderBrush" Color="{DynamicResource ControlBorderColor}" />
+    <SolidColorBrush x:Key="PopupBrush" Color="{DynamicResource PopupColor}" />
+    <SolidColorBrush x:Key="DangerTextBrush" Color="{DynamicResource DangerTextColor}" />
     <SolidColorBrush x:Key="DangerBrush" Color="{DynamicResource DangerColor}" />
     <SolidColorBrush x:Key="SuccessBrush" Color="{DynamicResource SuccessColor}" />
     <SolidColorBrush x:Key="WarningBrush" Color="{DynamicResource WarningColor}" />

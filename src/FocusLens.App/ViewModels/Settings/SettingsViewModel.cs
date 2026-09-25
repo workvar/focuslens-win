@@ -13,17 +13,22 @@ public sealed partial class SettingsViewModel : ObservableObject
     public AiSettingsViewModel Ai { get; }
     public MeetingSettingsViewModel Meetings { get; }
     public StatusViewModel Status { get; }
+    public PermissionsViewModel Permissions { get; }
+    public LocalToolsViewModel LocalTools { get; }
     public UpdatesSettingsViewModel Updates { get; }
 
     /// <summary>Position of the Updates tab in SettingsView.xaml.</summary>
-    public const int UpdatesTab = 7;
+    public const int UpdatesTab = 9;
+
+    /// <summary>Position of the Local tools tab in SettingsView.xaml.</summary>
+    public const int LocalToolsTab = 8;
 
     [ObservableProperty] private int _selectedTab;
 
     public SettingsViewModel(
         GeneralSettingsViewModel general, AppearanceSettingsViewModel appearance, TrackingSettingsViewModel tracking,
         PrivacySettingsViewModel privacy, AiSettingsViewModel ai, MeetingSettingsViewModel meetings, StatusViewModel status,
-        UpdatesSettingsViewModel updates)
+        PermissionsViewModel permissions, LocalToolsViewModel localTools, UpdatesSettingsViewModel updates)
     {
         General = general;
         Appearance = appearance;
@@ -32,6 +37,8 @@ public sealed partial class SettingsViewModel : ObservableObject
         Ai = ai;
         Meetings = meetings;
         Status = status;
+        Permissions = permissions;
+        LocalTools = localTools;
         Updates = updates;
     }
 }

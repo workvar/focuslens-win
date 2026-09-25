@@ -11,6 +11,9 @@
 
             <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
                 <Button Content="Re-summarize" Command="{Binding ResummarizeCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource NotConverter}}" />
+                <Button Content="Delete recording" Command="{Binding DeleteRecordingCommand}" Margin="8,0,0,0"
+                        Visibility="{Binding HasRecording, Converter={StaticResource BoolToVisibility}}" />
+                <Button Content="Delete meeting" Style="{StaticResource DangerButton}" Command="{Binding DeleteMeetingCommand}" Margin="8,0,0,0" />
                 <TextBlock Text="{Binding Status}" Style="{StaticResource Muted}" Margin="12,0,0,0" VerticalAlignment="Center" />
             </StackPanel>
 

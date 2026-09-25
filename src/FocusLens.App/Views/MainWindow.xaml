@@ -18,10 +18,14 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Root" Background="{TemplateBinding Background}" CornerRadius="{DynamicResource RowRadius}" Padding="{TemplateBinding Padding}">
+                        <Border x:Name="Root" Background="{TemplateBinding Background}" CornerRadius="{DynamicResource RowRadius}" Padding="{TemplateBinding Padding}"
+                                BorderThickness="2" BorderBrush="Transparent">
                             <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
                         </Border>
                         <ControlTemplate.Triggers>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                            </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="Root" Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
                             </Trigger>
@@ -58,7 +62,7 @@
                 <DockPanel Margin="10">
                     <StackPanel DockPanel.Dock="Top" Margin="0,4,0,12" Orientation="Horizontal">
                         <Button Content="&#xE700;" FontFamily="Segoe MDL2 Assets" Command="{Binding ToggleSidebarCommand}"
-                                Style="{StaticResource NavButton}" ToolTip="Collapse or expand" Width="40" />
+                                Style="{StaticResource NavButton}" ToolTip="Collapse or expand" AutomationProperties.Name="Collapse or expand sidebar" Width="40" />
                         <TextBlock Text="FocusLens" Style="{StaticResource Wordmark}" VerticalAlignment="Center" Margin="8,0,0,0"
                                    Visibility="{Binding IsSidebarCollapsed, Converter={StaticResource InvertedBoolToVisibility}}" />
                     </StackPanel>
@@ -132,8 +136,8 @@
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" Margin="4,6" />
-                                    <Button Grid.Column="1" Content="&#xE74D;" FontFamily="Segoe MDL2 Assets" Padding="6,4" Background="Transparent" BorderThickness="0"
-                                            ToolTip="Delete chat"
+                                    <Button Grid.Column="1" Content="&#xE74D;" Style="{StaticResource IconButton}"
+                                            ToolTip="Delete chat" AutomationProperties.Name="Delete chat"
                                             Command="{Binding DataContext.DeleteConversationCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                             CommandParameter="{Binding}" />
                                     <Grid.InputBindings>
@@ -157,12 +161,30 @@
                 </Grid.RowDefinitions>
 
                 <views:MeetingBanner Grid.Row="0" DataContext="{Binding Banner}"
-                                     Visibility="{Binding IsVisible, Converter={StaticResource BoolToVisibility}}" />
+                                     Visibility="{Binding DataContext.ShowBanner, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibility}}" />
 
-                <Border Grid.Row="1" Background="{DynamicResource SurfaceAltBrush}" Padding="16,8"
-                        Visibility="{Binding RestrictionNotice, Converter={StaticResource NotNullToVisibility}}">
-                    <TextBlock Text="{Binding RestrictionNotice}" Style="{StaticResource Muted}" />
-                </Border>
+                <StackPanel Grid.Row="1">
+                    <Border Background="{DynamicResource SurfaceAltBrush}" Padding="16,8"
+                            Visibility="{Binding RestrictionNotice, Converter={StaticResource NotNullToVisibility}}">
+                        <TextBlock Text="{Binding RestrictionNotice}" Style="{StaticResource Muted}" />
+                    </Border>
+                    <!-- Asks once to set up local AI and search; the install itself always waits for a confirmation. -->
+                    <Border Background="{DynamicResource AccentSoftBrush}" Padding="16,10"
+                            Visibility="{Binding ShowSetupNotice, Converter={StaticResource BoolToVisibility}}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock VerticalAlignment="Center"
+                                       Text="Ollama or Chroma DB is not set up on this PC. FocusLens can download and install them for you." />
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="12,0,0,0">
+                                <Button Content="Set up" Style="{StaticResource PrimaryButton}" Command="{Binding OpenSetupCommand}" />
+                                <Button Content="Not now" Margin="8,0,0,0" Command="{Binding DismissSetupCommand}" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </StackPanel>
 
                 <ContentControl Grid.Row="2" Content="{Binding CurrentPage}" />
             </Grid>

@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using FocusLens.App.Services.Dialogs;
 using FocusLens.Core.Meetings;
 using FocusLens.Core.Repositories;
 
@@ -16,12 +17,17 @@ public sealed partial class MeetingsViewModel : ObservableObject
     [ObservableProperty] private MeetingDetailViewModel? _detail;
     [ObservableProperty] private MeetingListItem? _selected;
 
+    /// <summary>Record, pause and stop state, shared with the strip at the top of the window.</summary>
+    public MeetingBannerViewModel Recorder { get; }
+
     public ObservableCollection<MeetingListItem> Meetings { get; } = new();
     public ObservableCollection<ActionItemWithMeeting> OpenActions { get; } = new();
     public bool IsEmpty => Meetings.Count == 0;
 
-    public MeetingsViewModel(MeetingStore store, MeetingSummarizer summarizer, MeetingSessionCoordinator coordinator)
+    public MeetingsViewModel(
+        MeetingStore store, MeetingSummarizer summarizer, MeetingSessionCoordinator coordinator, MeetingBannerViewModel recorder)
     {
+        Recorder = recorder;
         _store = store;
         _summarizer = summarizer;
         _coordinator = coordinator;
@@ -40,7 +46,11 @@ public sealed partial class MeetingsViewModel : ObservableObject
 
     public async Task OpenAsync(string meetingId)
     {
-        var detail = new MeetingDetailViewModel(meetingId, _store, _summarizer) { BackRequested = () => { Selected = null; Detail = null; } };
+        var detail = new MeetingDetailViewModel(meetingId, _store, _summarizer)
+        {
+            BackRequested = () => { Selected = null; Detail = null; },
+            Deleted = () => { Selected = null; Detail = null; _ = RefreshAsync(); },
+        };
         await detail.LoadAsync();
         Detail = detail;
     }
@@ -58,12 +68,12 @@ public sealed partial class MeetingsViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void StartNow() => _coordinator.Start();
-
-    [RelayCommand]
     private async Task DeleteAsync(MeetingListItem item)
     {
+        if (!ConfirmDialog.AskDeleteMeeting(item.Title)) return;
+        var meeting = await _store.FetchAsync(item.Id);
         await _store.DeleteMeetingAsync(item.Id);
+        MeetingAudioFiles.TryDelete(meeting?.AudioDir);
         if (Selected?.Id == item.Id) Selected = null;
         await RefreshAsync();
     }

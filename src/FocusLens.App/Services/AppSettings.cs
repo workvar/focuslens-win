@@ -15,6 +15,9 @@ public sealed class AppSettings
 {
     public bool OnboardingCompleted { get; set; }
     public bool SidebarCollapsed { get; set; }
+
+    /// <summary>The user chose "Not now" on the Ollama / Chroma setup prompt. Settings > Local tools stays available.</summary>
+    public bool SetupPromptDismissed { get; set; }
     public AppearanceMode Appearance { get; set; } = AppearanceMode.System;
     public bool StartWithWindows { get; set; } = true;
 

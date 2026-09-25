@@ -7,14 +7,8 @@
         <ScrollViewer VerticalScrollBarVisibility="Auto"
                       Visibility="{Binding Detail, Converter={StaticResource InvertedNullToVisibility}}">
             <StackPanel Margin="28,24">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Text="Meetings" Style="{StaticResource Title}" />
-                    <Button Grid.Column="1" Content="Take notes now" Style="{StaticResource PrimaryButton}" Command="{Binding StartNowCommand}" />
-                </Grid>
+                <TextBlock Text="Meetings" Style="{StaticResource Title}" />
+                <views:RecordingControls DataContext="{Binding Recorder}" Margin="0,16,0,0" />
 
                 <Border Style="{StaticResource Card}" Margin="0,20,0,0"
                         Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVisibility}}">
@@ -28,27 +22,35 @@
                 <ItemsControl ItemsSource="{Binding Meetings}" Margin="0,16,0,0">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Border Style="{StaticResource Card}" Margin="0,0,0,10" Cursor="Hand">
-                                <Border.InputBindings>
-                                    <MouseBinding MouseAction="LeftClick"
-                                                  Command="{Binding DataContext.OpenCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                  CommandParameter="{Binding}" />
-                                </Border.InputBindings>
+                            <Border Style="{StaticResource Card}" Margin="0,0,0,10">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <StackPanel>
+                                    <!-- The open-meeting hit area sits behind the content so the delete button is never a click on the row. -->
+                                    <Border Grid.ColumnSpan="2" Background="Transparent" Cursor="Hand">
+                                        <Border.InputBindings>
+                                            <MouseBinding MouseAction="LeftClick"
+                                                          Command="{Binding DataContext.OpenCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                          CommandParameter="{Binding}" />
+                                        </Border.InputBindings>
+                                    </Border>
+                                    <StackPanel IsHitTestVisible="False">
                                         <TextBlock Text="{Binding Title}" Style="{StaticResource Heading}" />
                                         <TextBlock Style="{StaticResource Muted}">
                                             <Run Text="{Binding Provider, Mode=OneWay}" /> <Run Text=" | " /> <Run Text="{Binding When, Mode=OneWay}" />
                                         </TextBlock>
                                     </StackPanel>
-                                    <StackPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                    <StackPanel Grid.Column="1" IsHitTestVisible="False" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,8,0">
                                         <TextBlock Text="{Binding Duration}" HorizontalAlignment="Right" />
                                         <TextBlock Text="{Binding Phase}" Style="{StaticResource Muted}" HorizontalAlignment="Right" />
                                     </StackPanel>
+                                    <Button Grid.Column="2" Content="&#xE74D;" Style="{StaticResource IconButton}" VerticalAlignment="Center"
+                                            ToolTip="Delete meeting" AutomationProperties.Name="Delete meeting"
+                                            Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}" />
                                 </Grid>
                             </Border>
                         </DataTemplate>

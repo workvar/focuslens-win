@@ -18,10 +18,12 @@
                 <ResourceDictionary Source="Themes/Cards.xaml" />
                 <ResourceDictionary Source="Themes/Buttons.xaml" />
                 <ResourceDictionary Source="Themes/Inputs.xaml" />
+                <ResourceDictionary Source="Themes/ComboBoxes.xaml" />
                 <ResourceDictionary Source="Themes/Toggles.xaml" />
                 <ResourceDictionary Source="Themes/Lists.xaml" />
                 <ResourceDictionary Source="Themes/Sliders.xaml" />
                 <ResourceDictionary Source="Themes/Status.xaml" />
+                <ResourceDictionary Source="Themes/Progress.xaml" />
             </ResourceDictionary.MergedDictionaries>
 
             <conv:BoolToVisibilityConverter x:Key="BoolToVisibility" />

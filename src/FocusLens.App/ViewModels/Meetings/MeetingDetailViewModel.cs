@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using FocusLens.App.Services.Dialogs;
 using FocusLens.Core.Meetings;
 using FocusLens.Core.Repositories;
 
@@ -49,6 +50,9 @@ public sealed partial class MeetingDetailViewModel : ObservableObject
 
     public string MeetingId { get; }
     public Action? BackRequested { get; set; }
+    public Action? Deleted { get; set; }
+    private string? _audioDir;
+    [ObservableProperty] private bool _hasRecording;
     [ObservableProperty] private string _title = "";
     [ObservableProperty] private string _subtitle = "";
     [ObservableProperty] private bool _isBusy;
@@ -70,6 +74,8 @@ public sealed partial class MeetingDetailViewModel : ObservableObject
         var meeting = await _store.FetchAsync(MeetingId);
         if (meeting is null) return;
         Title = meeting.Title;
+        _audioDir = meeting.AudioDir;
+        HasRecording = !string.IsNullOrEmpty(meeting.AudioDir) && Directory.Exists(meeting.AudioDir);
         var started = DateTimeOffset.FromUnixTimeSeconds(meeting.StartedAt).ToLocalTime();
         Subtitle = $"{MeetingProviderExtensions.FromId(meeting.Provider).DisplayName()}, {started:ddd MMM d, h:mm tt}";
 
@@ -89,6 +95,30 @@ public sealed partial class MeetingDetailViewModel : ObservableObject
 
     [RelayCommand]
     private void Back() => BackRequested?.Invoke();
+
+    [RelayCommand]
+    private async Task DeleteMeetingAsync()
+    {
+        if (!ConfirmDialog.AskDeleteMeeting(Title)) return;
+        await _store.DeleteMeetingAsync(MeetingId);
+        MeetingAudioFiles.TryDelete(_audioDir);
+        Deleted?.Invoke();
+    }
+
+    [RelayCommand]
+    private async Task DeleteRecordingAsync()
+    {
+        if (!ConfirmDialog.AskDeleteRecording(Title)) return;
+        if (!MeetingAudioFiles.TryDelete(_audioDir))
+        {
+            Status = "The recording could not be deleted. Close any app that is playing it and try again.";
+            return;
+        }
+        await _store.ClearAudioAsync(MeetingId);
+        _audioDir = null;
+        HasRecording = false;
+        Status = "Recording deleted.";
+    }
 
     [RelayCommand]
     private async Task ToggleActionAsync(ActionItemViewModel item)

@@ -11,6 +11,9 @@
     <Color x:Key="AccentHoverColor">#4DB97D</Color>
     <Color x:Key="AccentTextColor">#06140C</Color>
     <Color x:Key="AccentSoftColor">#1E3A2B</Color>
+    <Color x:Key="ControlBorderColor">#6B8577</Color>
+    <Color x:Key="PopupColor">#1C2822</Color>
+    <Color x:Key="DangerTextColor">#1A0606</Color>
     <Color x:Key="DangerColor">#F87171</Color>
     <Color x:Key="SuccessColor">#5FCB8E</Color>
     <Color x:Key="WarningColor">#F5B04C</Color>

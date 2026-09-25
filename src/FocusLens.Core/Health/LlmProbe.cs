@@ -71,7 +71,7 @@ public sealed class LlmProbe : IHealthProbe
             if (wanted.Length == 0)
                 return ServiceHealth.Degraded(Name, "Ollama is running, but no model is selected in Settings > AI");
             if (!installed.Any(n => IsSameModel(n, wanted)))
-                return ServiceHealth.Degraded(Name, $"Ollama is running, but '{wanted}' is not pulled. Run: ollama pull {wanted}");
+                return ServiceHealth.Degraded(Name, $"Ollama is running, but '{wanted}' is not downloaded yet. Get it under Settings > Local tools, or run: ollama pull {wanted}");
             return ServiceHealth.Connected(Name, $"Ollama, {wanted}");
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or JsonException)

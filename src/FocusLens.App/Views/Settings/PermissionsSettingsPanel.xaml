@@ -1,0 +1,66 @@
+<UserControl x:Class="FocusLens.App.Views.Settings.PermissionsSettingsPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel MaxWidth="640" HorizontalAlignment="Left">
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="Permissions" Style="{StaticResource Heading}" />
+                            <TextBlock Text="{Binding Summary}" Style="{StaticResource Muted}" Margin="0,4,0,0"
+                                       AutomationProperties.LiveSetting="Polite" />
+                        </StackPanel>
+                        <Button Grid.Column="1" Content="Check again" Command="{Binding RefreshCommand}" VerticalAlignment="Center"
+                                IsEnabled="{Binding IsRefreshing, Converter={StaticResource NotConverter}}" />
+                    </Grid>
+
+                    <ItemsControl ItemsSource="{Binding Items}" Margin="0,8,0,0">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="0,14">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                                                <Border CornerRadius="10" Padding="8,1" Margin="10,0,0,0" VerticalAlignment="Center">
+                                                    <Border.Style>
+                                                        <Style TargetType="Border">
+                                                            <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsGranted}" Value="True">
+                                                                    <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Border.Style>
+                                                    <TextBlock Text="{Binding StatusLabel}" FontSize="12" FontWeight="SemiBold" />
+                                                </Border>
+                                            </StackPanel>
+                                            <TextBlock Text="{Binding Purpose}" Style="{StaticResource Muted}" Margin="0,3,0,0" />
+                                            <TextBlock Text="{Binding Detail}" FontSize="12" Margin="0,3,0,0" />
+                                        </StackPanel>
+                                        <Button Grid.Column="1" Content="{Binding GrantLabel}" Style="{StaticResource PrimaryButton}"
+                                                Command="{Binding GrantCommand}" VerticalAlignment="Center" Margin="12,0,0,0"
+                                                Visibility="{Binding CanGrant, Converter={StaticResource BoolToVisibility}}" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <TextBlock Style="{StaticResource Muted}" FontSize="12" Margin="0,4,0,0"
+                               Text="Windows only lets you change privacy switches yourself. The buttons open the exact page, and this list updates when you return." />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

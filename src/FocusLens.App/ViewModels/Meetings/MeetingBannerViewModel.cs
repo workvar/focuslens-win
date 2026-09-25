@@ -16,10 +16,15 @@ public sealed partial class MeetingBannerViewModel : ObservableObject
 
     [ObservableProperty] private bool _isVisible;
     [ObservableProperty] private string _title = "";
+    [ObservableProperty] private string _headline = "Not recording";
     [ObservableProperty] private string _phaseText = "";
     [ObservableProperty] private string _elapsedText = "";
     [ObservableProperty] private double _progress;
     [ObservableProperty] private bool _showProgress;
+    [ObservableProperty] private bool _isIdle = true;
+    [ObservableProperty] private bool _isRecording;
+    [ObservableProperty] private bool _isPaused;
+    [ObservableProperty] private bool _isProcessing;
     [ObservableProperty] private bool _canStart;
     [ObservableProperty] private bool _canDismiss;
     [ObservableProperty] private bool _canPause;
@@ -42,6 +47,7 @@ public sealed partial class MeetingBannerViewModel : ObservableObject
 
         IsVisible = phase.IsActive;
         Title = snapshot.Title;
+        Headline = phase is MeetingPhase.Idle ? "Not recording" : snapshot.Title;
         PhaseText = phase switch
         {
             MeetingPhase.Detected d => $"{d.Candidate.Provider.DisplayName()} meeting detected",
@@ -56,6 +62,10 @@ public sealed partial class MeetingBannerViewModel : ObservableObject
 
         ShowProgress = phase is MeetingPhase.Transcribing;
         Progress = phase is MeetingPhase.Transcribing t ? t.Progress : 0;
+        IsIdle = phase is MeetingPhase.Idle;
+        IsRecording = phase is MeetingPhase.Recording;
+        IsPaused = phase is MeetingPhase.Paused;
+        IsProcessing = phase.IsProcessing;
         CanStart = phase is MeetingPhase.Detected;
         CanDismiss = phase is MeetingPhase.Detected;
         CanPause = phase is MeetingPhase.Recording;
@@ -75,8 +85,14 @@ public sealed partial class MeetingBannerViewModel : ObservableObject
     [RelayCommand]
     private void Start()
     {
+        // From the detection prompt this records that meeting; from an idle state it starts a manual recording.
         if (_snapshot.Phase is MeetingPhase.Detected detected) _coordinator.Start(detected.Candidate);
+        else if (_snapshot.Phase is MeetingPhase.Idle) _coordinator.Start();
     }
+
+    /// <summary>Idle-state button on the Meetings page, kept separate so "Record" never shows for a detected meeting twice.</summary>
+    [RelayCommand]
+    private void RecordNew() => Start();
 
     [RelayCommand]
     private void Dismiss()

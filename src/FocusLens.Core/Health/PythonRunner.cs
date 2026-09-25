@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using FocusLens.Core.Paths;
 
 namespace FocusLens.Core.Health;
 
@@ -10,12 +11,19 @@ public static class PythonRunner
     private const int StorePlaceholderExitCode = 9009;
 
     /// <summary>The Windows launcher first, then the names an installer or the Store may register.</summary>
-    private static readonly (string Exe, string[] Prefix)[] Candidates =
+    private static readonly (string Exe, string[] Prefix)[] SystemCandidates =
     {
         ("py", new[] { "-3" }),
         ("python", Array.Empty<string>()),
         ("python3", Array.Empty<string>()),
     };
+
+    /// <summary>The private environment FocusLens sets up for Chroma wins over whatever is on PATH.</summary>
+    private static IEnumerable<(string Exe, string[] Prefix)> Candidates()
+    {
+        if (File.Exists(AppPaths.ChromaPython)) yield return (AppPaths.ChromaPython, Array.Empty<string>());
+        foreach (var candidate in SystemCandidates) yield return candidate;
+    }
 
     /// <summary>
     /// Tries each interpreter in turn and returns the first one that exits cleanly. When none does, returns
@@ -25,7 +33,7 @@ public static class PythonRunner
         string script, IReadOnlyDictionary<string, string> env, CancellationToken ct)
     {
         PythonResult best = new(false, -1, "");
-        foreach (var (exe, prefix) in Candidates)
+        foreach (var (exe, prefix) in Candidates())
         {
             var result = await TryRunAsync(exe, prefix, script, env, ct);
             if (result.Started && result.ExitCode == 0) return result;
