@@ -15,10 +15,11 @@ public sealed partial class SettingsViewModel : ObservableObject
     public StatusViewModel Status { get; }
     public PermissionsViewModel Permissions { get; }
     public LocalToolsViewModel LocalTools { get; }
+    public ChromaSettingsViewModel Memory { get; }
     public UpdatesSettingsViewModel Updates { get; }
 
     /// <summary>Position of the Updates tab in SettingsView.xaml.</summary>
-    public const int UpdatesTab = 9;
+    public const int UpdatesTab = 10;
 
     /// <summary>Position of the Local tools tab in SettingsView.xaml.</summary>
     public const int LocalToolsTab = 8;
@@ -28,7 +29,8 @@ public sealed partial class SettingsViewModel : ObservableObject
     public SettingsViewModel(
         GeneralSettingsViewModel general, AppearanceSettingsViewModel appearance, TrackingSettingsViewModel tracking,
         PrivacySettingsViewModel privacy, AiSettingsViewModel ai, MeetingSettingsViewModel meetings, StatusViewModel status,
-        PermissionsViewModel permissions, LocalToolsViewModel localTools, UpdatesSettingsViewModel updates)
+        PermissionsViewModel permissions, LocalToolsViewModel localTools, ChromaSettingsViewModel memory,
+        UpdatesSettingsViewModel updates)
     {
         General = general;
         Appearance = appearance;
@@ -39,6 +41,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         Status = status;
         Permissions = permissions;
         LocalTools = localTools;
+        Memory = memory;
         Updates = updates;
     }
 }

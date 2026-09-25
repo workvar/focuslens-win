@@ -1,0 +1,68 @@
+<UserControl x:Class="FocusLens.App.Views.Settings.ChromaSettingsPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel MaxWidth="640" HorizontalAlignment="Left">
+            <TextBlock Style="{StaticResource Muted}" Margin="0,0,0,12"
+                       Text="FocusLens can build a private search index of your activity, on-screen text and past chats, so the AI finds relevant moments by meaning, not just keywords. It is stored and computed on this PC." />
+
+            <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                <StackPanel>
+                    <CheckBox Content="Use semantic search in AI chat" IsChecked="{Binding Enabled}"
+                              IsEnabled="{Binding IsInstalled}" />
+                    <TextBlock Text="{Binding StatusText}" Margin="0,10,0,0" FontSize="12"
+                               AutomationProperties.LiveSetting="Polite">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock" BasedOn="{StaticResource Muted}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasError}" Value="True">
+                                        <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <StackPanel Margin="0,10,0,0" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}">
+                        <ProgressBar IsIndeterminate="True" AutomationProperties.Name="Indexing progress" />
+                        <TextBlock Text="{Binding Progress}" Style="{StaticResource Muted}" FontSize="12" Margin="0,6,0,0"
+                                   TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                <StackPanel>
+                    <TextBlock Text="Indexed" Style="{StaticResource Heading}" />
+                    <Grid Margin="0,8,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition />
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Text="Activity sessions" Margin="0,2" />
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding ActivityCount}" />
+                        <TextBlock Grid.Row="1" Text="Screen text" Margin="0,2" />
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding ScreenTextCount}" />
+                        <TextBlock Grid.Row="2" Text="Daily summaries" Margin="0,2" />
+                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SummaryCount}" />
+                        <TextBlock Grid.Row="3" Text="Chat messages" Margin="0,2" />
+                        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding MessageCount}" />
+                        <TextBlock Grid.Row="4" Text="Last updated" Margin="0,2" />
+                        <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding LastUpdated}" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <StackPanel Orientation="Horizontal" IsEnabled="{Binding IsBusy, Converter={StaticResource NotConverter}}">
+                <Button Content="Update now" Style="{StaticResource PrimaryButton}" Command="{Binding UpdateNowCommand}"
+                        IsEnabled="{Binding IsInstalled}" />
+                <Button Content="Rebuild from scratch" Margin="8,0,0,0" Command="{Binding RebuildCommand}"
+                        IsEnabled="{Binding IsInstalled}" />
+                <Button Content="Delete index" Margin="8,0,0,0" Command="{Binding DeleteCommand}"
+                        IsEnabled="{Binding IsInstalled}" />
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

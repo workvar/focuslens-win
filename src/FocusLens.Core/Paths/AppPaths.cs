@@ -31,6 +31,9 @@ public static class AppPaths
     public static string ChromaDir => Path.Combine(Root, "chroma");
     /// <summary>Private Python environment that FocusLens creates for ChromaDB.</summary>
     public static string ChromaVenvDir => Path.Combine(Root, "chroma-venv");
+    /// <summary>Ingest and search scripts, copied here from the app before each run.</summary>
+    public static string ChromaScriptsDir => Path.Combine(Root, "chroma-scripts");
+    public static string ChromaSettingsFile => Path.Combine(Root, "chroma-settings.json");
     public static string ChromaPython => Path.Combine(ChromaVenvDir, "Scripts", "python.exe");
     public static string LogsDir => Ensure(Path.Combine(Root, "logs"));
     public static string MeetingsDir => Ensure(Path.Combine(Root, "meetings"));

@@ -37,6 +37,9 @@
             <TabItem Header="Local tools">
                 <views:LocalToolsSettingsPanel DataContext="{Binding LocalTools}" />
             </TabItem>
+            <TabItem Header="Memory">
+                <views:ChromaSettingsPanel DataContext="{Binding Memory}" />
+            </TabItem>
             <TabItem Header="Updates">
                 <views:UpdatesSettingsPanel DataContext="{Binding Updates}" />
             </TabItem>

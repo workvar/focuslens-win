@@ -87,6 +87,7 @@ public sealed partial class MainViewModel : ObservableObject
                 new NotificationsPermission(), new AgentPermission(services.Agent), new StartupPermission(services.Agent, services.Settings),
             }),
             LocalTools,
+            new ChromaSettingsViewModel(services.ChromaIndex),
             new UpdatesSettingsViewModel(services.Updates));
         Onboarding = new OnboardingViewModel(services, CompleteOnboarding);
 
@@ -113,6 +114,7 @@ public sealed partial class MainViewModel : ObservableObject
         await Meetings.RefreshAsync();
         await Dashboard.LoadAsync();
         _ = Status.RefreshAsync(force: true); // Chroma starts Python, so never make startup wait for it
+        _services.ChromaIndex.Start();
     }
 
     private void CompleteOnboarding()

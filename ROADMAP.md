@@ -41,7 +41,7 @@ Repo status on Windows:
 - [ ] UI fixes
 - [ ] UX fixes
 
-Repo status: `AppPaths` already reserves a Chroma folder under `%LOCALAPPDATA%\FocusLens`. The ingest and query prototype lives in the macOS repo (`Scripts/chroma/`) and will be shared.
+Repo status: the Chroma index is wired into the app: background indexing, semantic matches in AI chat, and a Memory settings tab. Scripts live in `src/FocusLens.Core/Resources/chroma/`. Docs and tests are still to do.
 
 ## Phase 3: Focus tools (v1.2.0)
 

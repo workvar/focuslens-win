@@ -1,3 +1,4 @@
+using FocusLens.Core.Chroma;
 using FocusLens.Core.Context;
 using FocusLens.Core.Repositories;
 using FocusLens.Core.Settings;
@@ -73,6 +74,10 @@ public sealed class ContextBuilder
                 new ScreenTextRepository(_repository.Database), context, question, start, end);
         }
         catch { /* screen text is optional context */ }
+
+        // Same privacy gate as screen text: the index is built from it.
+        if (ChromaIndexService.SemanticSearchEnabled)
+            context.SemanticMatches = ChromaSearch.Render(await ChromaSearch.SearchAsync(question));
         return context;
     }
 }

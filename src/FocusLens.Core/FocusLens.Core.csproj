@@ -9,5 +9,7 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\*.json" />
+    <!-- Chroma ingest and search scripts. Staged to the data folder at run time; logical names keep them flat. -->
+    <EmbeddedResource Include="Resources\chroma\*.py" LogicalName="chroma/%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>

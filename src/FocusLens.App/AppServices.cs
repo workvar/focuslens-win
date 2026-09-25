@@ -1,3 +1,4 @@
+using FocusLens.Core.Chroma;
 using FocusLens.App.Services;
 using FocusLens.App.Services.Auth;
 using FocusLens.Core.Ai;
@@ -34,6 +35,7 @@ public sealed class AppServices : IDisposable
     public SupabaseAuthService Auth { get; }
     public TrayIconService Tray { get; }
     public UpdateService Updates { get; }
+    public ChromaIndexService ChromaIndex { get; } = new();
 
     public MeetingSessionCoordinator MeetingSession { get; }
     public MeetingPipeline MeetingPipeline { get; }
@@ -87,6 +89,7 @@ public sealed class AppServices : IDisposable
     public void Dispose()
     {
         MeetingDetection.Dispose();
+        ChromaIndex.Dispose();
         Updates.Dispose();
         Tray.Dispose();
     }

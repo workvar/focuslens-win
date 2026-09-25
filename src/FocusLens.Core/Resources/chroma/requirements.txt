@@ -1,0 +1,6 @@
+# FocusLens -> ChromaDB ingestion tool
+# Install with:  pip install -r requirements.txt
+#
+# chromadb bundles a local embedding model (all-MiniLM-L6-v2, ONNX runtime),
+# so no cloud embedding API is needed and no usage text leaves the machine.
+chromadb>=1.0,<2.0

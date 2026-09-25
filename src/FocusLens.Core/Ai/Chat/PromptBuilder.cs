@@ -46,6 +46,9 @@ public static class PromptBuilder
             .AppendLine(OrNone(context.SessionContext, "  No on-screen text recorded")).AppendLine();
         prompt.AppendLine("OTHER SIGNALS (input counts, open files, copy counts, lock and sleep events):")
             .AppendLine(OrNone(context.Signals, "  No signals recorded")).AppendLine();
+        prompt.AppendLine("RELATED MOMENTS (found by meaning in the local search index; may come from any date, " +
+                          "so check the date before relying on one):")
+            .AppendLine(OrNone(context.SemanticMatches, "  None found")).AppendLine();
         prompt.AppendLine("OPEN BROWSER TABS (every tab seen open, including background tabs):")
             .AppendLine(OrNone(context.OpenTabs, "  No tabs recorded")).AppendLine();
         prompt.Append($"USER'S QUESTION: {question}");
