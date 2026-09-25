@@ -72,7 +72,15 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           $files = Get-ChildItem Releases -File | ForEach-Object { $_.FullName }
-          $ghArgs = @("release", "create", "v$env:VERSION") + $files + @(
+          $tag = "v$env:VERSION"
+          # Re-runs of the same tag replace the assets instead of failing.
+          gh release view $tag *> $null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload $tag @files --clobber
+            if ($LASTEXITCODE -ne 0) { throw "gh release upload failed" }
+            return
+          }
+          $ghArgs = @("release", "create", $tag) + $files + @(
             "--title", "FocusLens v$env:VERSION", "--target", $env:GITHUB_SHA)
           # Prefer the hand-written notes for this phase; pre-release tags (1.0.0-beta.1) reuse the base version's notes.
           $notes = "docs/release-notes/v$($env:VERSION.Split('-')[0]).md"
