@@ -28,6 +28,13 @@ public sealed record AiRequestOptions
     /// <summary>Ollama only: a different model for this request. Null uses the model from the AI tab.</summary>
     public string? OllamaModel { get; init; }
 
+    /// <summary>
+    /// A PNG sent with the prompt, for the models that can look at one. Guide attaches the screen
+    /// it is planning against. Never set for a model that cannot see: most providers answer 400
+    /// rather than ignoring it.
+    /// </summary>
+    public byte[]? ImagePng { get; init; }
+
     public static AiRequestOptions Standard { get; } = new();
 
     /// <summary>One word back (ON or OFF), no reasoning, and the model stays warm between checks.</summary>

@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Ask FocusLens Guide" Width="440" SizeToContent="Height"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent" ResizeMode="NoResize"
-        Topmost="True" ShowInTaskbar="False" FontFamily="{StaticResource BodyFont}">
+        Topmost="True" ShowInTaskbar="False" ShowActivated="True" WindowStartupLocation="Manual" FontFamily="{StaticResource BodyFont}">
     <!-- One line: "What do you need help with?". Enter starts the guide, Esc closes. -->
     <Border Margin="10" Height="56" CornerRadius="{DynamicResource CardRadius}" Background="{DynamicResource SurfaceBrush}"
             BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}">

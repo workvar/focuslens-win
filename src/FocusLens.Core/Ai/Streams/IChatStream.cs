@@ -12,7 +12,7 @@ public interface IChatStream
         HttpClient http, string prompt, IReadOnlyList<Message> history, AiRequestOptions options, CancellationToken ct);
 }
 
-internal static class ChatStreamHelpers
+public static class ChatStreamHelpers
 {
     /// <summary>A non-empty override, otherwise the provider's built-in model.</summary>
     public static string ChosenModel(string? model, string fallback)

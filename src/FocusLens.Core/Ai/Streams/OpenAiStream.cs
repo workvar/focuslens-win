@@ -37,17 +37,20 @@ public sealed class OpenAiStream : IChatStream
         // NVIDIA's DeepSeek builds hang unless thinking is turned on in the request.
         var nvidiaDeepSeek = _kind == ChatCompletionsKind.Nvidia
             && model.Contains("deepseek", StringComparison.OrdinalIgnoreCase);
+        // Nemotron thinks by default and will spend a short Guide budget before any plan.
+        var nvidiaNemotron = _kind == ChatCompletionsKind.Nvidia
+            && model.Contains("nemotron", StringComparison.OrdinalIgnoreCase);
         var body = new Dictionary<string, object>
         {
             ["model"] = model,
             ["stream"] = true,
-            ["messages"] = ChatStreamHelpers.ChatMessages(history, prompt),
+            ["messages"] = AiImageAttachment.Messages(history, prompt, options.ImagePng, AiImageAttachment.Style.OpenAi),
         };
         if (options.MaxTokens is { } maxTokens)
             body[reasoning ? "max_completion_tokens" : "max_tokens"] = maxTokens;
         if (options.Temperature is { } temperature && !reasoning && !nvidiaDeepSeek)
             body["temperature"] = temperature;
-        if (options.DisableThinking && reasoning) body["reasoning_effort"] = "none";
+        if (options.DisableThinking && (reasoning || nvidiaNemotron)) body["reasoning_effort"] = "none";
         // DeepSeek thinks unless told not to. Guide and Focus set this so a short answer
         // is not spent on a chain of thought. Chat leaves it at the default.
         if (_kind == ChatCompletionsKind.DeepSeek && options.DisableThinking)
@@ -58,6 +61,8 @@ public sealed class OpenAiStream : IChatStream
                 ["enable_thinking"] = true,
                 ["thinking"] = true,
             };
+        else if (nvidiaNemotron && options.DisableThinking)
+            body["chat_template_kwargs"] = new Dictionary<string, object> { ["enable_thinking"] = false };
 
         using var request = new HttpRequestMessage(HttpMethod.Post, _endpoint)
         {

@@ -48,4 +48,20 @@ internal static class GuideNative
     [DllImport("user32.dll")] public static extern bool UnhookWindowsHookEx(IntPtr hook);
     [DllImport("user32.dll")] public static extern IntPtr CallNextHookEx(IntPtr hook, int code, IntPtr wParam, IntPtr lParam);
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode)] public static extern IntPtr GetModuleHandleW(string? name);
+
+    // Listing what the user already has open, and handing focus to the prompt box.
+    public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr param);
+
+    [DllImport("user32.dll")] public static extern bool EnumWindows(EnumWindowsProc callback, IntPtr param);
+    [DllImport("user32.dll")] public static extern bool IsWindowVisible(IntPtr hWnd);
+    [DllImport("user32.dll")] public static extern IntPtr GetWindow(IntPtr hWnd, uint command);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern int GetWindowTextW(IntPtr hWnd, System.Text.StringBuilder text, int count);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern int GetWindowTextLengthW(IntPtr hWnd);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern int GetClassNameW(IntPtr hWnd, System.Text.StringBuilder text, int count);
+    [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hWnd);
+    [DllImport("user32.dll")] public static extern IntPtr SetFocus(IntPtr hWnd);
+    [DllImport("user32.dll")] public static extern bool AttachThreadInput(uint attachTo, uint attachFrom, bool attach);
+    [DllImport("kernel32.dll")] public static extern uint GetCurrentThreadId();
+
+    public const uint GW_OWNER = 4;
 }

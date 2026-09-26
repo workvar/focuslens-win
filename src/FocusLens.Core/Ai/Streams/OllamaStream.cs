@@ -30,7 +30,7 @@ public sealed class OllamaStream : IChatStream
         {
             ["model"] = model,
             ["stream"] = true,
-            ["messages"] = ChatStreamHelpers.ChatMessages(history, prompt),
+            ["messages"] = AiImageAttachment.Messages(history, prompt, options.ImagePng, AiImageAttachment.Style.Ollama),
         };
         Apply(options, body);
 

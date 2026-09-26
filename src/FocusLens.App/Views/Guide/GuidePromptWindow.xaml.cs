@@ -1,6 +1,9 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
+using System.Windows.Threading;
+using FocusLens.Platform.Windows.Guide;
 
 namespace FocusLens.App.Views.Guide;
 
@@ -18,7 +21,7 @@ public partial class GuidePromptWindow : Window
     public GuidePromptWindow()
     {
         InitializeComponent();
-        Loaded += (_, _) => Input.Focus();
+        Loaded += (_, _) => ClaimCaret(attempts: 20);
         Deactivated += (_, _) => CloseOnce();
         Closing += (_, _) => _closing = true;
     }
@@ -32,6 +35,22 @@ public partial class GuidePromptWindow : Window
             SystemParameters.VirtualScreenTop + SystemParameters.VirtualScreenHeight - 96);
         Show();
         Activate();
+        GuideOverlayStyle.FocusWindow(new WindowInteropHelper(this).Handle);
+    }
+
+    /// <summary>
+    /// Puts the caret in the field and keeps asking until WPF agrees. Focus can be refused on the
+    /// turn the window is shown, because activation has not finished, and a single Focus() call
+    /// there is silently dropped.
+    /// </summary>
+    private void ClaimCaret(int attempts)
+    {
+        if (_closing || attempts <= 0) return;
+        Input.Focus();
+        Keyboard.Focus(Input);
+        Input.CaretIndex = Input.Text.Length;
+        if (Input.IsKeyboardFocused) return;
+        Dispatcher.BeginInvoke(DispatcherPriority.Input, new Action(() => ClaimCaret(attempts - 1)));
     }
 
     private void OnTextChanged(object sender, TextChangedEventArgs e) =>

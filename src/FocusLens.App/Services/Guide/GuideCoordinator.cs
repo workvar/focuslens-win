@@ -28,7 +28,10 @@ public sealed class GuideCoordinator : IDisposable
     {
         _settings = settings;
         var cursor = new GuideCursorController(settings, dispatcher);
-        Session = new GuideSessionController(new LlmGuidePlanner(client, settings), _walker, cursor);
+        var planner = new LlmGuidePlanner(client, settings);
+        // The route planner shares the step planner's web search, so one request never costs two searches.
+        var router = new LlmGuideRoutePlanner(client, settings, planner.NotesAsync);
+        Session = new GuideSessionController(planner, _walker, cursor, router);
         _hotkey.Pressed += OnHotkey;
         settings.Changed += Apply;
     }

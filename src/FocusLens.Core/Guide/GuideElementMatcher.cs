@@ -73,8 +73,7 @@ public static class GuideElementMatcher
 
     public static bool SameLabel(string a, string b)
     {
-        var left = Normalise(a);
-        return left.Length > 0 && left == Normalise(b);
+        return GuideLabel.Same(a, b);
     }
 
     /// <summary>
@@ -167,5 +166,5 @@ public static class GuideElementMatcher
         return score;
     }
 
-    private static string Normalise(string text) => text.Trim().ToLowerInvariant();
+    private static string Normalise(string text) => GuideLabel.Normalise(text);
 }

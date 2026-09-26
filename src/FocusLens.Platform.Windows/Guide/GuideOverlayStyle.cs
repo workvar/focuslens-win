@@ -28,4 +28,37 @@ public static class GuideOverlayStyle
     }
 
     public static IntPtr ForegroundWindow() => GuideNative.GetForegroundWindow();
+
+    /// <summary>
+    /// Brings a window to the front and gives it keyboard focus, even though this process is not the
+    /// one the user is interacting with.
+    ///
+    /// Windows refuses SetForegroundWindow to a background process, which is exactly the case for the
+    /// Guide prompt box: it is opened by a global hotkey while another app is in front. Attaching to
+    /// that app's input thread for the moment of the call is the supported way round it. Without it
+    /// the box appears without a caret and the user has to click it before they can type, which
+    /// defeats the point of a shortcut.
+    /// </summary>
+    public static void FocusWindow(IntPtr hwnd)
+    {
+        if (hwnd == IntPtr.Zero) return;
+        var foreground = GuideNative.GetForegroundWindow();
+        if (foreground == hwnd || foreground == IntPtr.Zero)
+        {
+            GuideNative.SetForegroundWindow(hwnd);
+            return;
+        }
+        var theirThread = GuideNative.GetWindowThreadProcessId(foreground, out _);
+        var ourThread = GuideNative.GetCurrentThreadId();
+        var attached = theirThread != ourThread && GuideNative.AttachThreadInput(ourThread, theirThread, true);
+        try
+        {
+            GuideNative.SetForegroundWindow(hwnd);
+            GuideNative.SetFocus(hwnd);
+        }
+        finally
+        {
+            if (attached) GuideNative.AttachThreadInput(ourThread, theirThread, false);
+        }
+    }
 }

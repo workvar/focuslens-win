@@ -23,7 +23,7 @@ public sealed class ClaudeStream : IChatStream
             ["model"] = model,
             ["max_tokens"] = options.MaxTokens ?? 1024,
             ["stream"] = true,
-            ["messages"] = ChatStreamHelpers.ChatMessages(history, prompt),
+            ["messages"] = AiImageAttachment.Messages(history, prompt, options.ImagePng, AiImageAttachment.Style.Anthropic),
         };
         // Sonnet 4.6 already thinks off. Sending thinking next to temperature (what Guide and
         // Focus set) is a 400. Chat omits both and succeeds. Sonnet 5 thinks unless told not to,
