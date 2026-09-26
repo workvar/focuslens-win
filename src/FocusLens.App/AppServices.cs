@@ -2,6 +2,10 @@ using FocusLens.Core.Chroma;
 using FocusLens.App.Services;
 using FocusLens.App.Services.Auth;
 using FocusLens.App.Services.Focus;
+using FocusLens.App.Services.Guide;
+using FocusLens.App.Services.HoldFill;
+using FocusLens.Core.HoldFill;
+using FocusLens.Core.Guide;
 using FocusLens.Core.Focus;
 using FocusLens.Core.Focus.Classification;
 using FocusLens.Core.Focus.Session;
@@ -50,6 +54,13 @@ public sealed class AppServices : IDisposable
     /// <summary>Focus Mode: goal, countdown, and the nudge / act / protect ladder. Runs on the UI thread.</summary>
     public FocusSessionController Focus { get; }
 
+    /// <summary>Guide: the ghost cursor that walks the user through a task.</summary>
+    public GuideSettings GuideSettings { get; }
+    public GuideCoordinator Guide { get; }
+
+    /// <summary>Hold to fill: suggests and types a search when the pointer rests on an empty search field.</summary>
+    public HoldFillCoordinator HoldFill { get; }
+
     public AppServices(Action<string> openMeeting)
     {
         Settings = AppSettings.Load();
@@ -95,6 +106,13 @@ public sealed class AppServices : IDisposable
             new LlmFocusClassifier(AiClient, focusSettings, message => Log.Info(message)),
             focusSettings, new FocusSessionStore(), focusReader, new WindowsFocusWindowCloser(focusReader),
             new WindowsFocusActivityWatcher(), new DispatcherFocusScheduler());
+
+        GuideSettings = GuideSettings.Load();
+        Guide = new GuideCoordinator(AiClient, GuideSettings, System.Windows.Application.Current.Dispatcher);
+
+        var holdFillContext = new HoldFillContextSource(Activity, Focus, Guide.Session);
+        HoldFill = new HoldFillCoordinator(GuideSettings, new LlmHoldFillSuggester(AiClient, GuideSettings),
+            holdFillContext.GetAsync, System.Windows.Application.Current.Dispatcher, Log);
     }
 
     /// <summary>Marks meetings a crash left in "recording" as interrupted, on startup.</summary>
@@ -105,6 +123,8 @@ public sealed class AppServices : IDisposable
     public void Dispose()
     {
         Focus.Stop();
+        Guide.Dispose();
+        HoldFill.Dispose();
         MeetingDetection.Dispose();
         ChromaIndex.Dispose();
         Updates.Dispose();

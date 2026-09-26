@@ -46,6 +46,9 @@
             <TabItem Header="Updates">
                 <views:UpdatesSettingsPanel DataContext="{Binding Updates}" />
             </TabItem>
+            <TabItem Header="Guide">
+                <views:GuideSettingsPanel DataContext="{Binding GuideSettings}" />
+            </TabItem>
         </TabControl>
     </Grid>
 </UserControl>

@@ -39,6 +39,8 @@ public sealed partial class FocusSessionController
     private bool _isClassifying;
     private bool _isReadingContext;
     private FocusContext? _countdownTarget;
+    /// <summary>The window Focus Mode just closed, ignored until the time given (see ClosingGrace).</summary>
+    private (FocusContext Target, DateTime Until)? _recentlyClosed;
     private Guid _flashToken;
     private IDisposable? _ticker;
     private DateTime _lastTickAt;

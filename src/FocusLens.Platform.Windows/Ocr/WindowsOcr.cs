@@ -6,9 +6,20 @@ namespace FocusLens.Platform.Windows.Ocr;
 /// <summary>On-device OCR using the built-in Windows.Media.Ocr engine (no network, no images kept).</summary>
 public sealed class WindowsOcr
 {
-    private readonly OcrEngine? _engine = OcrEngine.TryCreateFromUserProfileLanguages();
+    private readonly OcrEngine? _engine = TryCreateEngine();
 
     public bool IsAvailable => _engine is not null;
+
+    /// <summary>
+    /// Null when no OCR language is installed. Also null when the OCR component itself is missing
+    /// (some Windows N, Server and trimmed installs), where activation throws instead of returning null;
+    /// without this catch the whole agent stopped at startup.
+    /// </summary>
+    private static OcrEngine? TryCreateEngine()
+    {
+        try { return OcrEngine.TryCreateFromUserProfileLanguages(); }
+        catch { return null; }
+    }
 
     public async Task<string?> RecognizeAsync(byte[] png)
     {

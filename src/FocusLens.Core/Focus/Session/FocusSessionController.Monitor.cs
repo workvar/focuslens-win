@@ -9,9 +9,19 @@ public sealed partial class FocusSessionController
     /// <summary>How long a new page must stay in front before the model is asked.</summary>
     public static readonly TimeSpan SettleTime = TimeSpan.FromSeconds(2);
 
+    /// <summary>How long a window just closed by Focus Mode is ignored while it goes away.</summary>
+    public static readonly TimeSpan ClosingGrace = TimeSpan.FromSeconds(5);
+    /// <summary>Apps may ask "save changes?" in a new window of the same process; the user gets time to answer.</summary>
+    public static readonly TimeSpan SavePromptGrace = TimeSpan.FromSeconds(20);
+
     private async void MonitorTick(FocusContext? current)
     {
         if (Session is not { } session || _isClassifying) return;
+        if (current is not null && _recentlyClosed is { } closed && IsClosing(current, closed.Target)
+            && DateTime.UtcNow < closed.Until)
+        {
+            current = null;
+        }
         if (current is null)
         {
             _observation = FocusObservation.Neutral;
@@ -75,4 +85,8 @@ public sealed partial class FocusSessionController
         try { return await _reader.CurrentAsync(allowStale); }
         catch { return null; }
     }
+
+    /// <summary>The window just closed, or (for apps, not browser tabs) a prompt from the same process.</summary>
+    private static bool IsClosing(FocusContext current, FocusContext closed) =>
+        current.Window == closed.Window || (!closed.IsBrowser && current.Pid == closed.Pid);
 }

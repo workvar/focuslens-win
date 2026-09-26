@@ -57,8 +57,8 @@
             <Button Style="{StaticResource PrimaryButton}" Command="{Binding StartCommand}" Margin="0,20,0,0" Padding="16,10"
                     HorizontalContentAlignment="Center">
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="&#xE916;" FontFamily="Segoe MDL2 Assets" VerticalAlignment="Center" />
-                    <TextBlock Text="Start focus" Margin="8,0,0,0" />
+                    <TextBlock Text="&#xE916;" FontFamily="Segoe MDL2 Assets" VerticalAlignment="Center" Foreground="{DynamicResource AccentTextBrush}" />
+                    <TextBlock Text="Start focus" Margin="8,0,0,0" Foreground="{DynamicResource AccentTextBrush}" />
                 </StackPanel>
             </Button>
         </StackPanel>

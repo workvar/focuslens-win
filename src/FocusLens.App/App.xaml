@@ -19,7 +19,6 @@
                 <ResourceDictionary Source="Themes/Text.xaml" />
                 <ResourceDictionary Source="Themes/Cards.xaml" />
                 <ResourceDictionary Source="Themes/Buttons.xaml" />
-                <ResourceDictionary Source="Themes/Focus.xaml" />
                 <ResourceDictionary Source="Themes/Inputs.xaml" />
                 <ResourceDictionary Source="Themes/ComboBoxes.xaml" />
                 <ResourceDictionary Source="Themes/Toggles.xaml" />
@@ -27,6 +26,9 @@
                 <ResourceDictionary Source="Themes/Sliders.xaml" />
                 <ResourceDictionary Source="Themes/Status.xaml" />
                 <ResourceDictionary Source="Themes/Progress.xaml" />
+                <!-- Context menus (recent chats: pin, rename, delete). Without it the chat list and the chat page fail to draw. -->
+                <ResourceDictionary Source="Themes/Menus.xaml" />
+                <!-- Focus page, Settings > Focus and the floating widget. Without it those pages fail to load. -->
                 <ResourceDictionary Source="Themes/Focus.xaml" />
             </ResourceDictionary.MergedDictionaries>
 

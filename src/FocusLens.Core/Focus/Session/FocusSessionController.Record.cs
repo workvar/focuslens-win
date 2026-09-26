@@ -38,6 +38,7 @@ public sealed partial class FocusSessionController
         _observedContext = null;
         _latestContext = null;
         _pendingJudgement = null;
+        _recentlyClosed = null;
         LastRecord = record;
         UpdateTrayText();
         SetLive(100, 1);

@@ -8,11 +8,16 @@ namespace FocusLens.Core.Summary;
 
 /// <summary>
 /// Aggregates raw one-second activity rows into a DailySummary. Past days are
-/// immutable once built; today's summary is rebuilt at most every 15 minutes.
+/// immutable once built; today's summary is rebuilt at most every 30 seconds.
 /// </summary>
 public sealed class SummaryBuilder
 {
-    private static readonly TimeSpan StaleAfter = TimeSpan.FromMinutes(15);
+    /// <summary>
+    /// The dashboard reloads every 15 s and shows "Updated" with the time. With the old 15 minute
+    /// window its tiles and top apps lagged behind the hourly chart, which reads raw rows, and the
+    /// Refresh button changed nothing. A day is at most 86,400 rows, so a rebuild is cheap.
+    /// </summary>
+    private static readonly TimeSpan StaleAfter = TimeSpan.FromSeconds(30);
 
     private readonly Db _db;
     private readonly CategorizationService _categorizer;

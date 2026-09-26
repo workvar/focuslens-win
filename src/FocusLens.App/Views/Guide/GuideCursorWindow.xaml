@@ -1,0 +1,33 @@
+<Window x:Class="FocusLens.App.Views.Guide.GuideCursorWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="FocusLens guide" Width="320" Height="120"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent" ResizeMode="NoResize"
+        Topmost="True" ShowInTaskbar="False" ShowActivated="False" Focusable="False" IsHitTestVisible="False"
+        FontFamily="{StaticResource BodyFont}">
+    <!-- The ghost cursor: an arrow in the forest accent, a pulse ring while it points at something, and a tag
+         that reminds the user what the assistant is doing. Click-through and never focused (see GuideOverlayStyle). -->
+    <Grid x:Name="Root" Margin="10" HorizontalAlignment="Left" VerticalAlignment="Top">
+        <StackPanel Orientation="Horizontal">
+            <Grid x:Name="GlyphHost" Width="16" Height="20" FlowDirection="LeftToRight" VerticalAlignment="Top">
+                <Ellipse x:Name="Ring" Width="34" Height="34" Margin="-9,-7,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"
+                         Stroke="{DynamicResource AccentBrush}" StrokeThickness="2" Opacity="0" RenderTransformOrigin="0.5,0.5">
+                    <Ellipse.RenderTransform>
+                        <ScaleTransform x:Name="RingScale" ScaleX="0.9" ScaleY="0.9" />
+                    </Ellipse.RenderTransform>
+                </Ellipse>
+                <Path Fill="{DynamicResource AccentBrush}" Stroke="White" StrokeThickness="1.5" Stretch="Fill"
+                      Data="M 0,0 L 0,17.2 L 4.8,13.2 L 8.8,20 L 11.5,18 L 7.5,11.4 L 16,10.4 Z">
+                    <Path.Effect>
+                        <DropShadowEffect BlurRadius="4" ShadowDepth="1" Opacity="0.25" />
+                    </Path.Effect>
+                </Path>
+            </Grid>
+            <Border x:Name="TagPill" Margin="6,14,0,0" Padding="10,5" CornerRadius="14" VerticalAlignment="Top"
+                    Background="{DynamicResource AccentBrush}" FlowDirection="LeftToRight" Visibility="Collapsed">
+                <TextBlock x:Name="TagText" FontSize="12" FontWeight="SemiBold" TextWrapping="Wrap" MaxWidth="250"
+                           Foreground="{DynamicResource AccentTextBrush}" />
+            </Border>
+        </StackPanel>
+    </Grid>
+</Window>

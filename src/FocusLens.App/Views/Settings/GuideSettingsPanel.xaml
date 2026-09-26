@@ -1,0 +1,72 @@
+<UserControl x:Class="FocusLens.App.Views.Settings.GuideSettingsPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Settings tab for Guide: on or off, the shortcut, how the ghost cursor trails the pointer, and an optional planning model. -->
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel MaxWidth="640" HorizontalAlignment="Left">
+            <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                <StackPanel>
+                    <TextBlock Text="Guide" Style="{StaticResource Heading}" Margin="0,0,0,10" />
+                    <CheckBox x:Name="Enabled" Content="Enable Guide" Click="OnChanged" />
+                    <Grid Margin="0,12,0,0">
+                        <TextBlock Text="Shortcut" VerticalAlignment="Center" />
+                        <TextBox x:Name="Hotkey" Width="180" HorizontalAlignment="Right" IsReadOnly="True"
+                                 PreviewKeyDown="OnRecordHotkey" AutomationProperties.Name="Shortcut. Press a new combination." />
+                    </Grid>
+                    <TextBlock x:Name="HotkeyWarning" Foreground="{DynamicResource DangerBrush}" Visibility="Collapsed" Margin="0,6,0,0"
+                               Text="Another app already uses this shortcut. Pick a different one." />
+                    <TextBlock Style="{StaticResource FocusCaption}"
+                               Text="Click the box and press a combination with Ctrl, Alt or Win. Press it later to open the box, or to skip a step. Press Esc twice to stop a guide." />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                <StackPanel>
+                    <TextBlock Text="Ghost cursor" Style="{StaticResource Heading}" Margin="0,0,0,10" />
+                    <Grid>
+                        <TextBlock Text="Follow speed" />
+                        <TextBlock x:Name="FollowText" Style="{StaticResource Muted}" HorizontalAlignment="Right" />
+                    </Grid>
+                    <Slider x:Name="Follow" Minimum="1" Maximum="5" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,8,0,0"
+                            ValueChanged="OnFollowChanged" AutomationProperties.Name="Follow speed" />
+                    <CheckBox x:Name="ShowTag" Content="Show the tag next to the cursor" Margin="0,12,0,0" Click="OnChanged" />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                <StackPanel>
+                    <TextBlock Text="Hold to fill" Style="{StaticResource Heading}" Margin="0,0,0,10" />
+                    <CheckBox x:Name="HoldFill" Content="Suggest a search when I rest the pointer on an empty search box" Click="OnChanged" />
+                    <Grid Margin="0,12,0,0">
+                        <TextBlock Text="Hold for" />
+                        <TextBlock x:Name="HoldFillText" Style="{StaticResource Muted}" HorizontalAlignment="Right" />
+                    </Grid>
+                    <Slider x:Name="HoldFillSeconds" Minimum="0.5" Maximum="4" TickFrequency="0.5" IsSnapToTickEnabled="True" Margin="0,8,0,0"
+                            ValueChanged="OnHoldFillChanged" AutomationProperties.Name="Seconds to hold before the text is typed" />
+                    <TextBlock Style="{StaticResource FocusCaption}"
+                               Text="A bubble shows the search. Keep the pointer still and the ring fills, then the text is typed in; Enter is never pressed. Move away to cancel. Password boxes are never touched. The suggestion comes from your window titles of the last 20 minutes and your focus goal, sent to the model chosen below (or on the AI tab), so a local one keeps them on this PC. During a guide, the step's text is offered instead." />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                <StackPanel>
+                    <TextBlock Text="Web search" Style="{StaticResource Heading}" Margin="0,0,0,10" />
+                    <CheckBox x:Name="WebSearch" Content="Let the planner search the web for current steps" Click="OnChanged" />
+                    <TextBlock Margin="0,12,0,4" Text="SearXNG address (optional)" />
+                    <TextBox x:Name="SearxUrl" LostFocus="OnChanged" AutomationProperties.Name="SearXNG address" />
+                    <TextBlock Style="{StaticResource FocusCaption}"
+                               Text="Free, no account. Uses DuckDuckGo, or your own SearXNG server first if you enter one. Only your request and the words Windows 11 are sent, never anything from your screen. Off by default. Works with any AI provider." />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                <StackPanel>
+                    <TextBlock Text="Model for planning" Style="{StaticResource Heading}" Margin="0,0,0,10" />
+                    <TextBox x:Name="Model" LostFocus="OnChanged" AutomationProperties.Name="Ollama model for planning" />
+                    <TextBlock Style="{StaticResource FocusCaption}"
+                               Text="Optional Ollama model. Leave empty to use the model from the AI tab. A small one such as qwen2.5:3b is enough. What is on your screen goes to the model you choose, so a local one keeps it on this PC." />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

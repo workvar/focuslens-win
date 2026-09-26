@@ -43,4 +43,5 @@
     <Copy SourceFiles="@(AgentFiles)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
   </Target>
   <Import Project="$(MSBuildThisFileDirectory)..\..\build\StopAgent.targets" />
+  <Import Project="$(MSBuildThisFileDirectory)..\..\build\CheckXamlResources.targets" />
 </Project>

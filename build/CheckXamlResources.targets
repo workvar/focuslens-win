@@ -1,0 +1,59 @@
+<Project>
+  <!--
+    A {StaticResource Key} whose dictionary is not merged in App.xaml compiles fine and only fails
+    at run time: the page throws while loading and the app looks frozen (this happened twice when a
+    merge dropped Menus.xaml or Focus.xaml). This check fails the build instead. It reads App.xaml's
+    merged dictionaries plus each file's own keys, so it is fast and needs nothing installed.
+    Pass -p:FocusLensSkipXamlCheck=true to skip it.
+  -->
+  <UsingTask TaskName="CheckXamlStaticResources" TaskFactory="RoslynCodeTaskFactory"
+             AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <ProjectDir ParameterType="System.String" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System.IO" />
+      <Using Namespace="System.Linq" />
+      <Using Namespace="System.Collections.Generic" />
+      <Using Namespace="System.Text.RegularExpressions" />
+      <Code Type="Fragment" Language="cs"><![CDATA[
+        var keyRx = new Regex("x:Key=\"([^\"]+)\"");
+        var useRx = new Regex(@"\{StaticResource ([^}\s]+)\}");
+        var mergeRx = new Regex("ResourceDictionary Source=\"([^\"]+)\"");
+        Func<string, IEnumerable<string>> keysOf = text => keyRx.Matches(text).Cast<Match>().Select(m => m.Groups[1].Value);
+
+        var appText = File.ReadAllText(Path.Combine(ProjectDir, "App.xaml"));
+        var merged = mergeRx.Matches(appText).Cast<Match>().Select(m => m.Groups[1].Value).ToList();
+        var global = new HashSet<string>(keysOf(appText));
+        foreach (var source in merged)
+        {
+            var path = Path.Combine(ProjectDir, source.Replace('/', Path.DirectorySeparatorChar));
+            if (!File.Exists(path)) { Log.LogError("App.xaml merges {0}, which does not exist.", source); continue; }
+            global.UnionWith(keysOf(File.ReadAllText(path)));
+        }
+        foreach (var dup in merged.GroupBy(m => m).Where(g => g.Count() > 1))
+            Log.LogWarning("App.xaml merges {0} more than once.", dup.Key);
+
+        var skip = new[] { Path.DirectorySeparatorChar + "bin" + Path.DirectorySeparatorChar, Path.DirectorySeparatorChar + "obj" + Path.DirectorySeparatorChar };
+        foreach (var file in Directory.EnumerateFiles(ProjectDir, "*.xaml", SearchOption.AllDirectories))
+        {
+            if (skip.Any(s => file.Contains(s))) continue;
+            var text = File.ReadAllText(file);
+            var local = new HashSet<string>(keysOf(text));
+            foreach (Match use in useRx.Matches(text))
+            {
+                var key = use.Groups[1].Value;
+                if (key.StartsWith("{") || global.Contains(key) || local.Contains(key)) continue;
+                var line = text.Take(use.Index).Count(c => c == '\n') + 1;
+                Log.LogError(null, "FLXAML001", null, file, line, 0, 0, 0,
+                    "StaticResource '{0}' is not defined in App.xaml's merged dictionaries or in this file. The page would fail to load at run time.", key);
+            }
+        }
+      ]]></Code>
+    </Task>
+  </UsingTask>
+
+  <Target Name="CheckXamlStaticResources" BeforeTargets="PrepareForBuild" Condition="'$(FocusLensSkipXamlCheck)' != 'true' And !$(MSBuildProjectName.EndsWith('_wpftmp'))">
+    <CheckXamlStaticResources ProjectDir="$(MSBuildProjectDirectory)" />
+  </Target>
+</Project>

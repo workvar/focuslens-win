@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using FocusLens.App.ViewModels.Focus;
 using FocusLens.App.ViewModels.Status;
+using FocusLens.Core.Guide;
 
 namespace FocusLens.App.ViewModels.Settings;
 
@@ -20,11 +21,17 @@ public sealed partial class SettingsViewModel : ObservableObject
     public ChromaSettingsViewModel Memory { get; }
     public UpdatesSettingsViewModel Updates { get; }
 
+    /// <summary>Guide preferences, shared with the coordinator. Its tab is last so the tab indices above stay valid.</summary>
+    public GuideSettings? GuideSettings { get; init; }
+
     /// <summary>Position of the Updates tab in SettingsView.xaml.</summary>
     public const int UpdatesTab = 11;
 
     /// <summary>Position of the Local tools tab in SettingsView.xaml.</summary>
     public const int LocalToolsTab = 9;
+
+    /// <summary>Position of the Permissions tab in SettingsView.xaml.</summary>
+    public const int PermissionsTab = 8;
 
     [ObservableProperty] private int _selectedTab;
 
@@ -46,5 +53,14 @@ public sealed partial class SettingsViewModel : ObservableObject
         LocalTools = localTools;
         Memory = memory;
         Updates = updates;
+    }
+
+    /// <summary>
+    /// Permissions are first checked at launch, before the app has started the agent, so the tab
+    /// said "not running" until the window was re-activated. Opening the tab checks again.
+    /// </summary>
+    partial void OnSelectedTabChanged(int value)
+    {
+        if (value == PermissionsTab) _ = Permissions.RefreshAsync();
     }
 }

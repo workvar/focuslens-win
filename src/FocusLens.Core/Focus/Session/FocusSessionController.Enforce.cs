@@ -171,6 +171,9 @@ public sealed partial class FocusSessionController
 
     private void DidClose(FocusContext context, bool keepOutcome = false)
     {
+        // A closed window can take a moment to disappear, or ask to save first. Without this grace
+        // period the next reading saw it again and a second, phantom distraction started.
+        _recentlyClosed = (context, DateTime.UtcNow + (context.IsBrowser ? ClosingGrace : SavePromptGrace));
         if (!keepOutcome) _episodes.Mark(EpisodeOutcome.Closed);
         _episodes.FinishCurrent();
         _observation = FocusObservation.Neutral;

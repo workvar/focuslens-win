@@ -101,7 +101,10 @@ public sealed partial class MainViewModel : ObservableObject
             }),
             LocalTools,
             new ChromaSettingsViewModel(services.ChromaIndex),
-            new UpdatesSettingsViewModel(services.Updates));
+            new UpdatesSettingsViewModel(services.Updates))
+        {
+            GuideSettings = services.GuideSettings,
+        };
         Onboarding = new OnboardingViewModel(services, CompleteOnboarding);
 
         LocalTools.Changed += () => UiThread.Post(() => { _ = Settings.Ai.RefreshModelsAsync(); UpdateSetupNotice(); });

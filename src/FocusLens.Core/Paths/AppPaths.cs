@@ -28,6 +28,7 @@ public static class AppPaths
     public static string AiSettingsFile => Path.Combine(Root, "ai-settings.json");
     public static string AppSettingsFile => Path.Combine(Root, "app-settings.json");
     public static string FocusSettingsFile => Path.Combine(Root, "focus-settings.json");
+    public static string GuideSettingsFile => Path.Combine(Root, "guide-settings.json");
     /// <summary>Finished focus sessions, newest first.</summary>
     public static string FocusSessionsFile => Path.Combine(Root, "focus-sessions.json");
     /// <summary>Persistent ChromaDB folder. Not created here: its absence means "no index yet".</summary>

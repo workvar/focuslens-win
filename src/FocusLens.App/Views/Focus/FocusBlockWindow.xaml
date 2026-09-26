@@ -7,7 +7,9 @@
     <!-- Laid over a blocked window. It stays until the user closes what it covers or leaves it.
          There is always a way out: ending the session. -->
     <Border CornerRadius="10" Background="{DynamicResource WindowBrush}" BorderBrush="{DynamicResource AccentBrush}" BorderThickness="2">
-        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="40" MaxWidth="520">
+        <!-- Shrinks to fit a small window instead of cutting off the buttons. -->
+        <Viewbox StretchDirection="DownOnly" Margin="24">
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="16" Width="520">
             <TextBlock Text="&#xE72E;" FontFamily="Segoe MDL2 Assets" FontSize="44" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" />
             <TextBlock Text="Blocked to protect your focus" FontFamily="{StaticResource HeadingFont}" FontSize="32"
                        TextAlignment="Center" Margin="0,20,0,0" />
@@ -16,8 +18,8 @@
             <Button Style="{StaticResource PrimaryButton}" Command="{Binding CloseTargetCommand}" HorizontalAlignment="Center"
                     Padding="18,10" Margin="0,24,0,0">
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="&#xE711;" FontFamily="Segoe MDL2 Assets" VerticalAlignment="Center" />
-                    <TextBlock Text="{Binding CloseLabel}" Margin="8,0,0,0" />
+                    <TextBlock Text="&#xE711;" FontFamily="Segoe MDL2 Assets" VerticalAlignment="Center" Foreground="{DynamicResource AccentTextBrush}" />
+                    <TextBlock Text="{Binding CloseLabel}" Margin="8,0,0,0" Foreground="{DynamicResource AccentTextBrush}" />
                 </StackPanel>
             </Button>
             <Button Content="End focus session" Command="{Binding EndSessionCommand}" HorizontalAlignment="Center" Margin="0,12,0,0" />
@@ -28,5 +30,6 @@
                 <TextBlock Text=" left" Style="{StaticResource Muted}" />
             </StackPanel>
         </StackPanel>
+        </Viewbox>
     </Border>
 </Window>
