@@ -23,7 +23,17 @@ public static class GuideElementMatcher
         ["link"] = new[] { "Hyperlink" },
     };
 
-    public static GuideElement? Best(GuideTarget target, IEnumerable<GuideElement> elements)
+    /// <summary>
+    /// True when this step can still be done on the screen in front of the user. A step with no target
+    /// stays. A named target must still be visible, and a different text field does not count.
+    /// </summary>
+    public static bool StillOnScreen(GuideStep step, IReadOnlyList<GuideElement> screen)
+    {
+        if (step.Target is not { } target) return true;
+        return Best(target, screen, allowFieldFallback: false) is not null;
+    }
+
+    public static GuideElement? Best(GuideTarget target, IEnumerable<GuideElement> elements, bool allowFieldFallback = true)
     {
         GuideElement? best = null;
         var bestScore = 0;
@@ -37,7 +47,7 @@ public static class GuideElementMatcher
                 bestScore = score;
             }
         }
-        return best ?? FieldFallback(target, elements);
+        return best ?? (allowFieldFallback ? FieldFallback(target, elements) : null);
     }
 
     /// <summary>

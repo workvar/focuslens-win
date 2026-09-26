@@ -34,7 +34,16 @@ public readonly record struct GuideRect(double X, double Y, double Width, double
 }
 
 /// <summary>One thing on screen that UI Automation reported.</summary>
-public sealed record GuideElement(string Role, string Label, GuideRect Frame, string AppName);
+public sealed record GuideElement(
+    string Role, string Label, GuideRect Frame, string AppName, string? State = null, string? Window = null);
+
+/// <summary>
+/// What to do next, given the screen the model was just shown. A guide keeps asking for this as the
+/// screen changes, instead of following one script.
+/// </summary>
+public enum GuidePlanStatus { Proceed, Done, Blocked }
+
+public sealed record GuidePlan(GuidePlanStatus Status, IReadOnlyList<GuideStep> Steps, string? Note);
 
 /// <summary>Where a guide run is.</summary>
 public enum GuidePhaseKind { Idle, Planning, Guiding, Finished, Failed }

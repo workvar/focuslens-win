@@ -5,8 +5,11 @@ using FocusLens.Platform.Windows.Guide;
 namespace FocusLens.App.Services.Guide;
 
 /// <summary>
-/// Runs one guided task: plan, then walk the steps one at a time, waiting for the user to finish
-/// each before moving on. Runs on the UI thread; every await resumes there.
+/// Runs one guided task. The model plans only the next few actions from the screen in front of the
+/// user. After each action, if the following step's control is still visible, Guide continues at
+/// once. If the screen has moved on (a menu opened, a page changed, a dialog appeared), the rest of
+/// that plan is dropped and the model is shown the new screen. Runs on the UI thread; every await
+/// resumes there.
 ///
 /// Every step is resolved against the live screen when it starts and re-checked once a second
 /// while it waits, so the cursor follows a window the user drags and notices when the target has
@@ -19,7 +22,9 @@ public sealed class GuideSessionController
     private enum Outcome { Completed, Skipped, NotFound, Cancelled }
 
     private const int MissingTicksBeforeReplan = 5;
-    private const int MaxReplans = 2;
+    private const int MaxPlans = 16;
+    private const int MaxActions = 18;
+    private const int MaxMisses = 3;
 
     private readonly IGuidePlanner _planner;
     private readonly UiaWalker _walker;
@@ -75,53 +80,85 @@ public sealed class GuideSessionController
         {
             StartInput();
             _cursor.Show();
-            _cursor.Follow("Thinking...");
             SetPhase(new GuidePhase(GuidePhaseKind.Planning));
 
-            var screen = await _walker.SnapshotAsync();
-            IReadOnlyList<GuideStep> steps;
-            try { steps = await _planner.PlanAsync(request, screen, ct); }
-            catch (Exception ex) when (ex is not OperationCanceledException)
-            {
-                await FailAsync("I could not plan that. Try asking again.", ct);
-                return;
-            }
-
             var done = new List<GuideStep>();
-            var index = 0;
-            var replans = 0;
+            var ahead = new List<GuideStep>();
+            GuideStep? missed = null;
+            var plans = 0;
+            var actions = 0;
+            var misses = 0;
+            // The first step of a fresh plan is allowed a moment to appear. Later steps were named
+            // against an older screen, so a missing control means replan now.
+            var fresh = true;
 
-            while (index < steps.Count && !ct.IsCancellationRequested)
+            while (actions < MaxActions && !ct.IsCancellationRequested)
             {
-                var step = steps[index];
-                SetPhase(new GuidePhase(GuidePhaseKind.Guiding, index, steps.Count));
-                var next = index + 1 < steps.Count ? steps[index + 1] : null;
+                if (ahead.Count == 0)
+                {
+                    if (plans >= MaxPlans)
+                    {
+                        await FailAsync("The screen kept changing, so I stopped. Ask again from here.", ct);
+                        return;
+                    }
+                    _cursor.Follow(plans == 0 ? "Looking at the screen..." : "Checking the screen...");
+                    SetPhase(new GuidePhase(GuidePhaseKind.Planning));
+                    var screen = await _walker.SnapshotAsync();
+                    GuidePlan plan;
+                    try { plan = await _planner.PlanAsync(request, done, missed, screen, ct); }
+                    catch (Exception ex) when (ex is not OperationCanceledException)
+                    {
+                        await FailAsync("I could not plan that. Try asking again.", ct);
+                        return;
+                    }
+                    plans++;
+                    missed = null;
+                    fresh = true;
+                    switch (plan.Status)
+                    {
+                        case GuidePlanStatus.Done:
+                            await FinishAsync(plan.Note ?? plan.Steps.FirstOrDefault()?.Title, ct);
+                            return;
+                        case GuidePlanStatus.Blocked:
+                            await FailAsync(plan.Note ?? "I can't go further from this screen.", ct);
+                            return;
+                        default:
+                            ahead.AddRange(plan.Steps);
+                            if (ahead.Count == 0)
+                            {
+                                await FailAsync("I could not see a next step on screen.", ct);
+                                return;
+                            }
+                            break;
+                    }
+                }
 
-                switch (await PerformAsync(step, next, index, steps.Count, ct))
+                var step = ahead[0];
+                ahead.RemoveAt(0);
+                if (!fresh && !GuideElementMatcher.StillOnScreen(step, await _walker.SnapshotAsync()))
+                {
+                    ahead.Clear();
+                    continue;
+                }
+                fresh = false;
+
+                SetPhase(new GuidePhase(GuidePhaseKind.Guiding, done.Count, done.Count + 1 + ahead.Count));
+                switch (await PerformAsync(step, ahead.FirstOrDefault(), ct))
                 {
                     case Outcome.Completed:
                     case Outcome.Skipped:
                         done.Add(step);
-                        index++;
+                        actions++;
+                        misses = 0;
                         break;
 
                     case Outcome.NotFound:
-                        if (replans++ >= MaxReplans)
+                        misses++;
+                        missed = step;
+                        ahead.Clear();
+                        if (misses >= MaxMisses)
                         {
                             await FailAsync($"I cannot find \"{step.Target?.Label ?? step.Title}\" on screen.", ct);
-                            return;
-                        }
-                        _cursor.Follow("Finding another way...");
-                        screen = await _walker.SnapshotAsync();
-                        try
-                        {
-                            var rest = await _planner.ReplanAsync(request, done, step, screen, ct);
-                            steps = done.Concat(rest).ToList();
-                            index = done.Count;
-                        }
-                        catch (Exception ex) when (ex is not OperationCanceledException)
-                        {
-                            await FailAsync("I got lost. Try asking again.", ct);
                             return;
                         }
                         break;
@@ -131,7 +168,8 @@ public sealed class GuideSessionController
                 }
             }
 
-            if (!ct.IsCancellationRequested) await FinishAsync(ct);
+            if (!ct.IsCancellationRequested)
+                await FailAsync("I stopped here before that was finished. Ask again to continue.", ct);
         }
         catch (OperationCanceledException)
         {
@@ -146,9 +184,9 @@ public sealed class GuideSessionController
 
     // MARK: One step
 
-    private async Task<Outcome> PerformAsync(GuideStep step, GuideStep? next, int index, int total, CancellationToken ct)
+    private async Task<Outcome> PerformAsync(GuideStep step, GuideStep? next, CancellationToken ct)
     {
-        var tag = TagFor(step, index, total);
+        var tag = TagFor(step);
         var events = Channel.CreateBounded<GuideStepEvent>(new BoundedChannelOptions(16)
         {
             FullMode = BoundedChannelFullMode.DropOldest,
@@ -245,12 +283,14 @@ public sealed class GuideSessionController
 
     // MARK: Helpers
 
-    private static string TagFor(GuideStep step, int index, int total)
+    /// <summary>The cursor tag: the action, then the one-sentence reason when the model gave one.</summary>
+    private static string TagFor(GuideStep step)
     {
-        var prefix = $"Step {index + 1} of {total}: ";
-        return step.Action == GuideAction.Type && step.Text is { } text
-            ? prefix + $"Type \"{text}\", then press Return"
-            : prefix + step.Title;
+        var title = step.Action == GuideAction.Type && step.Text is { Length: > 0 } text
+            ? $"Type \"{text}\", then press Return"
+            : step.Title;
+        var detail = step.Detail?.Trim();
+        return string.IsNullOrEmpty(detail) || detail == title ? title : title + "\n" + detail;
     }
 
     private async Task<GuideRect?> LocateAsync(GuideTarget target)
@@ -293,10 +333,11 @@ public sealed class GuideSessionController
         _events = null;
     }
 
-    private async Task FinishAsync(CancellationToken ct)
+    private async Task FinishAsync(string? note, CancellationToken ct)
     {
         EndInput();
-        _cursor.Celebrate("All done");
+        var trimmed = note?.Trim();
+        _cursor.Celebrate(string.IsNullOrEmpty(trimmed) ? "All done" : trimmed);
         SetPhase(new GuidePhase(GuidePhaseKind.Finished));
         await Task.Delay(2500, ct);
         _cursor.Hide();

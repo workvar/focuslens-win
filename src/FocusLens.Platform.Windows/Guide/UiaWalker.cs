@@ -72,6 +72,7 @@ public sealed class UiaWalker
     {
         var root = AutomationElement.FromHandle(hwnd);
         var appName = AppNameOf(hwnd);
+        var window = WindowTitle(root);
         var walker = TreeWalker.ControlViewWalker;
         var frontier = new Queue<(AutomationElement Element, int Depth)>();
         frontier.Enqueue((root, 0));
@@ -88,7 +89,9 @@ public sealed class UiaWalker
             {
                 var label = info.Name?.Trim() ?? "";
                 if (label.Length is > 0 and <= 80)
-                    lock (output) output.Add(new GuideElement(role, label, new GuideRect(rect.X, rect.Y, rect.Width, rect.Height), appName));
+                    lock (output) output.Add(new GuideElement(
+                        role, label, new GuideRect(rect.X, rect.Y, rect.Width, rect.Height), appName,
+                        StateOf(element, role), window));
             }
 
             if (role == "Document" || depth >= MaxDepth) continue;
@@ -99,6 +102,42 @@ public sealed class UiaWalker
                 child = walker.GetNextSibling(child);
             }
         }
+    }
+
+    private static string? WindowTitle(AutomationElement root)
+    {
+        try
+        {
+            var name = root.Current.Name?.Trim();
+            if (string.IsNullOrEmpty(name)) return null;
+            return name.Length <= 80 ? name : name[..80];
+        }
+        catch { return null; }
+    }
+
+    /// <summary>On, off, or selected. Typed text is never read.</summary>
+    private static string? StateOf(AutomationElement element, string role)
+    {
+        try
+        {
+            if (role == "CheckBox" &&
+                element.TryGetCurrentPattern(TogglePattern.Pattern, out var toggleRaw) &&
+                toggleRaw is TogglePattern toggle)
+            {
+                return toggle.Current.ToggleState switch
+                {
+                    ToggleState.On => "on",
+                    ToggleState.Off => "off",
+                    _ => "mixed",
+                };
+            }
+            if (role is "RadioButton" or "TabItem" or "ListItem" or "TreeItem" or "DataItem" &&
+                element.TryGetCurrentPattern(SelectionItemPattern.Pattern, out var selectRaw) &&
+                selectRaw is SelectionItemPattern item && item.Current.IsSelected)
+                return "selected";
+        }
+        catch { }
+        return null;
     }
 
     private static string AppNameOf(IntPtr hwnd)

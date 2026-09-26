@@ -3,48 +3,55 @@ using System.Text;
 namespace FocusLens.Core.Guide;
 
 /// <summary>
-/// Builds the text sent to the model. The model plans in coarse steps and names each target by
-/// its visible text; Guide finds the real element when the step starts, so a plan never goes
-/// stale when a window moves.
+/// Builds the text sent to the model. The model names the next one to three actions on the screen
+/// it was just shown, and Guide asks again after that screen changes, so a plan never describes a
+/// window the user has already left.
 /// </summary>
 public static class GuidePrompt
 {
     /// <summary>Lines of on-screen context sent with a request. Small on purpose: a local model reads it on the user's own CPU and GPU.</summary>
     public const int MaxContextLines = 60;
 
-    public static string Plan(string request, IReadOnlyList<GuideElement> screen, string os,
-        IReadOnlyList<GuideSearchResult>? notes = null) => $$"""
-        You are a step-by-step guide for a person using a computer ({{os}}). They asked: "{{request}}"
+    /// <summary>How many actions one reply may contain. The rest of the task is planned again from the screen those actions leave behind.</summary>
+    public const int MaxPlannedSteps = 3;
 
-        Reply with JSON only, no prose, in exactly this shape:
-        {"steps":[{"title":"Click Bluetooth","detail":"optional short reason","action":"click","role":"row","label":"Bluetooth","area":"Settings sidebar"},{"title":"Type the address","action":"type","role":"field","label":"Address","text":"netflix.com"}]}
-
-        Rules:
-        - "action" is one of: click, toggle, type, open, look.
-        - "label" is the exact visible text of the thing to use, one to four words.
-        - "role" is one of: button, checkbox, switch, menu, menuitem, tab, row, field, link.
-        - For a type step, "label" names the field to click into (such as "Address" or "Search") and "text" is exactly what to type. Never use the text as the label.
-        - "title" is an imperative of at most six words, for a small tag by the cursor.
-        - Use at most 8 steps. One physical action per step. Start from what is on screen now.
-        - A menu command is two steps: click the menu title (role menu), then click the item (role menuitem). Mention any keyboard shortcut in "detail".
-        - Prefer a button on screen over a menu, and a menu over a keyboard shortcut.
-        - Never invent a label you are unsure of; prefer the Start menu or search to reach an app.
-
-        On screen now:
-        {{ScreenSummary(screen)}}{{WebNotes(notes)}}
-        """;
-
-    public static string Replan(string request, IReadOnlyList<GuideStep> done, GuideStep failed,
+    public static string Plan(string request, IReadOnlyList<GuideStep> done, GuideStep? missed,
         IReadOnlyList<GuideElement> screen, string os, IReadOnlyList<GuideSearchResult>? notes = null)
     {
         var finished = done.Count == 0 ? "- nothing yet" : string.Join("\n", done.Select(s => $"- {s.Title}"));
-        return Plan(request, screen, os, notes) + $"""
+        var miss = missed is null
+            ? ""
+            : $"The step \"{missed.Title}\" (\"{missed.Target?.Label ?? missed.Title}\") was not on screen. Use a different control from the list below.\n";
+        return $$"""
+        You are guiding one person through one task on their computer ({{os}}). They asked: "{{request}}"
 
+        Reply with JSON only, no prose, in this shape:
+        {"status":"continue","note":"","steps":[{"title":"Turn Bluetooth on","detail":"The switch in this window is off.","action":"toggle","role":"switch","label":"Bluetooth","area":"Settings"}]}
 
-            Already done:
-            {finished}
-            The step "{failed.Title}" could not be found on screen. Plan only the steps that remain from the current screen, starting with a different route to it.
-            """;
+        "status" is "continue", "done", or "blocked".
+        - "done": the screen already shows the task is finished. "note" is one sentence saying what you see that proves it. "steps" may be empty.
+        - "blocked": a dialog, sign-in, permission prompt, or missing app stops the task, and no listed control moves it forward. "note" says what they need to do. "steps" may be empty.
+        - "continue": give only the next 1 to {{MaxPlannedSteps}} actions that are possible on the screen below. Do not plan the rest of the task. You will be shown the screen again after it changes.
+
+        Each step:
+        - "title" names the control's exact visible words and the result ("Turn Bluetooth on", "Choose AirPods"). At most ten words. Never a generic "Open Settings" when that window is already in front.
+        - "detail" is one sentence about what is on screen that makes this the right next action, or what they will see after it.
+        - "label" is copied from the screen list. Never invent a button, menu, or app that is not listed. The only new text allowed is "text" on a type step, and only for words they asked to enter.
+        - "action" is click, toggle, type, open, or look. "role" is button, checkbox, switch, menu, menuitem, tab, row, field, or link.
+        - For a type step, "label" is the field (such as "Address") and "text" is what to type. Never put the typed words in "label".
+        - One physical action per step. Plan a menu item only when that item is listed now; otherwise plan only opening the menu.
+        - If a switch or checkbox already shows the state they need, marked [on] or [off], do not include it.
+        - If a menu, sheet, or dialog is open, the next step is inside it, not behind it.
+        - If the app they need is already listed, do not add a step that opens it.
+        - Do not repeat a step already done.
+        - Never type into a password or secure field.
+
+        Already done:
+        {{finished}}
+        {{miss}}
+        On screen now (the first app is the one in front):
+        {{ScreenSummary(screen)}}{{WebNotes(notes)}}
+        """;
     }
 
     /// <summary>
@@ -64,12 +71,32 @@ public static class GuidePrompt
         if (screen.Count == 0) return "- (nothing readable)";
         var seen = new HashSet<string>();
         var text = new StringBuilder();
+        string? app = null;
+        string? window = null;
         var lines = 0;
         foreach (var e in screen)
         {
-            if (!seen.Add($"{e.Role}|{e.Label}")) continue;
-            text.Append("- [").Append(e.Role.ToLowerInvariant()).Append("] ").Append(e.Label)
-                .Append(" (").Append(e.AppName).AppendLine(")");
+            if (!seen.Add($"{e.AppName}|{e.Window}|{e.Role}|{e.Label}|{e.State}")) continue;
+            if (e.AppName != app)
+            {
+                app = e.AppName;
+                window = null;
+                text.Append("App: ").AppendLine(e.AppName);
+                if (++lines >= MaxContextLines) break;
+            }
+            var title = e.Window ?? "";
+            if (title != (window ?? ""))
+            {
+                window = title;
+                if (title.Length > 0)
+                {
+                    text.Append("Window: ").AppendLine(title);
+                    if (++lines >= MaxContextLines) break;
+                }
+            }
+            text.Append("- [").Append(e.Role.ToLowerInvariant()).Append("] ").Append(e.Label);
+            if (!string.IsNullOrEmpty(e.State)) text.Append(" [").Append(e.State).Append(']');
+            text.AppendLine();
             if (++lines >= MaxContextLines) break;
         }
         return text.ToString().TrimEnd();

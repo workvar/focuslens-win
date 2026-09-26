@@ -5,9 +5,11 @@ namespace FocusLens.Core.Guide;
 
 public interface IGuidePlanner
 {
-    Task<IReadOnlyList<GuideStep>> PlanAsync(string request, IReadOnlyList<GuideElement> screen, CancellationToken ct);
-
-    Task<IReadOnlyList<GuideStep>> ReplanAsync(string request, IReadOnlyList<GuideStep> done, GuideStep failed,
+    /// <summary>
+    /// The next few actions for the screen in front of the user. <paramref name="done"/> is what already
+    /// happened; <paramref name="missed"/> is set when the previous step's control was not on screen.
+    /// </summary>
+    Task<GuidePlan> PlanAsync(string request, IReadOnlyList<GuideStep> done, GuideStep? missed,
         IReadOnlyList<GuideElement> screen, CancellationToken ct);
 }
 
@@ -20,6 +22,8 @@ public sealed class LlmGuidePlanner : IGuidePlanner
     private readonly StreamingAiClient _client;
     private readonly GuideSettings _settings;
     private readonly Func<IGuideWebSearch> _search;
+    private string? _notesRequest;
+    private IReadOnlyList<GuideSearchResult>? _notes;
 
     public LlmGuidePlanner(StreamingAiClient client, GuideSettings settings, Func<IGuideWebSearch>? search = null)
     {
@@ -39,27 +43,33 @@ public sealed class LlmGuidePlanner : IGuidePlanner
         OllamaModel = _settings.PlannerModel,
     };
 
-    public async Task<IReadOnlyList<GuideStep>> PlanAsync(string request, IReadOnlyList<GuideElement> screen, CancellationToken ct) =>
-        await AskAsync(GuidePrompt.Plan(request, screen, Os, await NotesAsync(request, ct)), ct);
-
-    public async Task<IReadOnlyList<GuideStep>> ReplanAsync(string request, IReadOnlyList<GuideStep> done, GuideStep failed,
+    public async Task<GuidePlan> PlanAsync(string request, IReadOnlyList<GuideStep> done, GuideStep? missed,
         IReadOnlyList<GuideElement> screen, CancellationToken ct) =>
-        await AskAsync(GuidePrompt.Replan(request, done, failed, screen, Os, await NotesAsync(request, ct)), ct);
+        await AskAsync(GuidePrompt.Plan(request, done, missed, screen, Os, await NotesAsync(request, ct)), ct);
 
     /// <summary>
     /// Web hints, only when the user turned search on. Only the request and the OS name are sent, never
-    /// anything read from the screen. A failed search means no notes, not a failed guide.
+    /// anything read from the screen. A failed search means no notes, not a failed guide. The result is
+    /// kept for the rest of this request so a mid-task replan does not search again.
     /// </summary>
     private async Task<IReadOnlyList<GuideSearchResult>> NotesAsync(string request, CancellationToken ct)
     {
-        if (!_settings.WebSearch) return Array.Empty<GuideSearchResult>();
-        try { return await _search().SearchAsync($"{request} {OsName}", ct); }
-        catch (Exception ex) when (ex is not OperationCanceledException) { return Array.Empty<GuideSearchResult>(); }
+        if (_notesRequest == request && _notes is { } cached) return cached;
+        IReadOnlyList<GuideSearchResult> loaded;
+        if (!_settings.WebSearch) loaded = Array.Empty<GuideSearchResult>();
+        else
+        {
+            try { loaded = await _search().SearchAsync($"{request} {OsName}", ct); }
+            catch (Exception ex) when (ex is not OperationCanceledException) { loaded = Array.Empty<GuideSearchResult>(); }
+        }
+        _notesRequest = request;
+        _notes = loaded;
+        return loaded;
     }
 
     private static string OsName => "Windows 11";
 
-    private async Task<IReadOnlyList<GuideStep>> AskAsync(string prompt, CancellationToken ct)
+    private async Task<GuidePlan> AskAsync(string prompt, CancellationToken ct)
     {
         var reply = new StringBuilder();
         await foreach (var delta in _client.StreamAsync(prompt, Array.Empty<FocusLens.Core.Models.Message>(), Options, ct))
