@@ -118,8 +118,6 @@ public sealed class AppServices : IDisposable
     /// <summary>Marks meetings a crash left in "recording" as interrupted, on startup.</summary>
     public Task RecoverMeetingsAsync() => Meetings.MarkOrphanedAsInterruptedAsync();
 
-    public void SaveAi() => Ai.Save();
-
     public void Dispose()
     {
         Focus.Stop();
@@ -129,5 +127,6 @@ public sealed class AppServices : IDisposable
         ChromaIndex.Dispose();
         Updates.Dispose();
         Tray.Dispose();
+        Auth.Dispose();
     }
 }

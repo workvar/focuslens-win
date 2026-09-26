@@ -12,7 +12,7 @@ namespace FocusLens.App.Services.Auth;
 /// the profile row are handled here; activity data never goes through Supabase.
 /// Register http://127.0.0.1/callback (any port) as an allowed redirect URL in the Supabase project.
 /// </summary>
-public sealed partial class SupabaseAuthService : ObservableObject
+public sealed partial class SupabaseAuthService : ObservableObject, IDisposable
 {
     private const string AccessTokenKey = "supabase.accessToken";
     private const string RefreshTokenKey = "supabase.refreshToken";
@@ -99,6 +99,8 @@ public sealed partial class SupabaseAuthService : ObservableObject
         CurrentUser = null;
         OnPropertyChanged(nameof(IsSignedIn));
     }
+
+    public void Dispose() => _http.Dispose();
 
     private sealed record Session(string AccessToken, string RefreshToken, string UserId, string Email, string? FullName);
 

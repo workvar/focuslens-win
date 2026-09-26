@@ -25,7 +25,6 @@ public partial class App : Application
         _showEvent = new EventWaitHandle(false, EventResetMode.AutoReset, ShowEventName);
         if (!isFirst)
         {
-            // Another instance is running: ask it to show its window, then exit.
             _showEvent.Set();
             Shutdown();
             return;
