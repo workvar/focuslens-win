@@ -235,8 +235,12 @@ public sealed class GuideSessionController
 
     // MARK: One step
 
-    /// <summary>Clicks, toggles, and opens are supposed to change the screen. Typing and reading often do not.</summary>
+    /// <summary>
+    /// Clicks, toggles, and opens are supposed to change the screen. Typing, reading, and focusing
+    /// the address field often do not, so those are not treated as a stuck control.
+    /// </summary>
     private static bool ChangesTheScreen(GuideStep step) =>
+        !string.Equals(step.Target?.Role, "field", StringComparison.OrdinalIgnoreCase) &&
         step.Action is GuideAction.Click or GuideAction.Toggle or GuideAction.Open;
 
     private async Task<Outcome> PerformAsync(GuideStep step, CancellationToken ct)

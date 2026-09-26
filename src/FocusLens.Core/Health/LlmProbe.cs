@@ -41,6 +41,12 @@ public sealed class LlmProbe : IHealthProbe
             Ai.AiProviderKind.OpenAi => CheckCloudAsync(
                 "OpenAI", "https://api.openai.com/v1/models", Key(Ai.AiSettings.SecretNames.OpenAi),
                 (request, key) => request.Headers.Authorization = new("Bearer", key), ct),
+            Ai.AiProviderKind.Nvidia => CheckCloudAsync(
+                "NVIDIA", "https://integrate.api.nvidia.com/v1/models", Key(Ai.AiSettings.SecretNames.Nvidia),
+                (request, key) => request.Headers.Authorization = new("Bearer", key), ct),
+            Ai.AiProviderKind.DeepSeek => CheckCloudAsync(
+                "DeepSeek", "https://api.deepseek.com/models", Key(Ai.AiSettings.SecretNames.DeepSeek),
+                (request, key) => request.Headers.Authorization = new("Bearer", key), ct),
             _ => CheckOllamaAsync(settings, ct),
         };
     }

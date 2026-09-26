@@ -13,6 +13,8 @@ public sealed class UiaWalker
 {
     private const int MaxNodesPerRoot = 450;
     private const int MaxDepth = 14;
+    private const int MaxPageControls = 24;
+    private const int MaxPageNodes = 200;
 
     private static readonly HashSet<string> Roles = new()
     {
@@ -65,18 +67,21 @@ public sealed class UiaWalker
 
     /// <summary>
     /// Breadth first, so the window's own chrome (toolbar, tabs, menu bar) is read before anything deep.
-    /// A depth-first walk used to spend the whole node budget inside a web page, so the controls the
-    /// planner needed were never reached. A web page's contents (Document) are not descended into.
+    /// A depth-first walk used to spend the whole node budget inside a web page, so the toolbar was never
+    /// reached. Page links and buttons are collected on their own budget instead.
     /// </summary>
     private static void Walk(IntPtr hwnd, List<GuideElement> output)
     {
         var root = AutomationElement.FromHandle(hwnd);
         var appName = AppNameOf(hwnd);
         var window = WindowTitle(root);
+        var windowTop = root.Current.BoundingRectangle.Y;
         var walker = TreeWalker.ControlViewWalker;
         var frontier = new Queue<(AutomationElement Element, int Depth)>();
         frontier.Enqueue((root, 0));
         var budget = MaxNodesPerRoot;
+        var address = new List<System.Windows.Rect>();
+        var namedAddress = false;
 
         while (frontier.Count > 0 && budget-- > 0)
         {
@@ -89,12 +94,26 @@ public sealed class UiaWalker
             {
                 var label = info.Name?.Trim() ?? "";
                 if (label.Length is > 0 and <= 80)
+                {
                     lock (output) output.Add(new GuideElement(
                         role, label, new GuideRect(rect.X, rect.Y, rect.Width, rect.Height), appName,
                         StateOf(element, role), window));
+                    if (IsBrowser(appName) && (role is "Edit" or "ComboBox") &&
+                        (label.Contains("address", StringComparison.OrdinalIgnoreCase) ||
+                         label.Contains("search", StringComparison.OrdinalIgnoreCase) ||
+                         label.Contains("location", StringComparison.OrdinalIgnoreCase)))
+                        namedAddress = true;
+                }
+                else if (IsBrowser(appName) && (role is "Edit" or "ComboBox") && rect.Y < windowTop + 200)
+                    address.Add(rect);
             }
 
-            if (role == "Document" || depth >= MaxDepth) continue;
+            if (role == "Document")
+            {
+                CollectPage(element, walker, appName, window, output);
+                continue;
+            }
+            if (depth >= MaxDepth) continue;
             var child = walker.GetFirstChild(element);
             while (child is not null)
             {
@@ -102,6 +121,59 @@ public sealed class UiaWalker
                 child = walker.GetNextSibling(child);
             }
         }
+
+        if (!namedAddress && address.Count > 0)
+        {
+            var top = address.OrderBy(r => r.Y).First();
+            lock (output) output.Add(new GuideElement(
+                "Edit", "Address", new GuideRect(top.X, top.Y, top.Width, top.Height), appName, Window: window));
+        }
+    }
+
+    /// <summary>Links and buttons inside the page, capped so a long page cannot crowd out the toolbar.</summary>
+    private static void CollectPage(AutomationElement root, TreeWalker walker, string appName, string? window, List<GuideElement> output)
+    {
+        var frontier = new Queue<(AutomationElement Element, int Depth)>();
+        frontier.Enqueue((root, 0));
+        var nodes = 0;
+        var kept = 0;
+        while (frontier.Count > 0 && nodes < MaxPageNodes && kept < MaxPageControls)
+        {
+            var (element, depth) = frontier.Dequeue();
+            nodes++;
+            System.Windows.Automation.AutomationElement.AutomationElementInformation info;
+            try { info = element.Current; }
+            catch { continue; }
+            var role = info.ControlType.ProgrammaticName.Replace("ControlType.", "");
+            var rect = info.BoundingRectangle;
+            if ((role is "Hyperlink" or "Button") && !info.IsOffscreen && !rect.IsEmpty && rect.Width > 1 && rect.Height > 1)
+            {
+                var label = info.Name?.Trim() ?? "";
+                if (label.Length is > 0 and <= 80)
+                {
+                    lock (output) output.Add(new GuideElement(
+                        role, label, new GuideRect(rect.X, rect.Y, rect.Width, rect.Height), appName,
+                        Window: window, OnPage: true));
+                    kept++;
+                }
+            }
+            if (depth >= 12 || (role == "Document" && depth > 0)) continue;
+            var child = walker.GetFirstChild(element);
+            while (child is not null)
+            {
+                frontier.Enqueue((child, depth + 1));
+                child = walker.GetNextSibling(child);
+            }
+        }
+    }
+
+    private static bool IsBrowser(string name)
+    {
+        var folded = name.ToLowerInvariant();
+        if (folded is "arc" or "dia") return true;
+        foreach (var key in new[] { "safari", "chrome", "firefox", "edge", "brave", "opera", "vivaldi", "orion", "chromium" })
+            if (folded.Contains(key, StringComparison.Ordinal)) return true;
+        return false;
     }
 
     private static string? WindowTitle(AutomationElement root)

@@ -18,6 +18,8 @@ public static class MeetingSummaryPolicy
             ? SummaryDecision.NoProvider : SummaryDecision.Allowed,
         AiProvider.Claude c => Cloud(c.ApiKey, allowCloudSummary),
         AiProvider.OpenAi o => Cloud(o.ApiKey, allowCloudSummary),
+        AiProvider.Nvidia n => Cloud(n.ApiKey, allowCloudSummary),
+        AiProvider.DeepSeek d => Cloud(d.ApiKey, allowCloudSummary),
         _ => SummaryDecision.NoProvider,
     };
 

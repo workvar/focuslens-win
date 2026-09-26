@@ -45,6 +45,10 @@ public sealed class FocusSettings
     public string AnthropicModel { get; set; } = "";
     /// <summary>Optional OpenAI model id for focus checks. Empty uses gpt-4o-mini. Used only while OpenAI is the provider.</summary>
     public string OpenAiModel { get; set; } = "";
+    /// <summary>Optional NVIDIA model id for focus checks. Empty uses Llama 3.3 70B. Used only while NVIDIA is the provider.</summary>
+    public string NvidiaModel { get; set; } = "";
+    /// <summary>Optional DeepSeek model id for focus checks. Empty uses deepseek-flash. Used only while DeepSeek is the provider.</summary>
+    public string DeepSeekModel { get; set; } = "";
     /// <summary>Where the user left the floating widget (top-left corner), if they moved it.</summary>
     public double? WidgetLeft { get; set; }
     public double? WidgetTop { get; set; }
@@ -65,6 +69,8 @@ public sealed class FocusSettings
         {
             AiProvider.Claude => options with { Model = Blank(AnthropicModel) },
             AiProvider.OpenAi => options with { Model = Blank(OpenAiModel) },
+            AiProvider.Nvidia => options with { Model = Blank(NvidiaModel) },
+            AiProvider.DeepSeek => options with { Model = Blank(DeepSeekModel) },
             _ => options with { OllamaModel = FocusModel },
         };
     }

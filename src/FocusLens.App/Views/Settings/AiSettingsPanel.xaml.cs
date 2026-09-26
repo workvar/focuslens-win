@@ -18,4 +18,14 @@ public partial class AiSettingsPanel : UserControl
     {
         if (DataContext is AiSettingsViewModel vm) vm.SetOpenAiKey(OpenAiKey.Password);
     }
+
+    private void OnNvidiaKeyChanged(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is AiSettingsViewModel vm) vm.SetNvidiaKey(NvidiaKey.Password);
+    }
+
+    private void OnDeepSeekKeyChanged(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is AiSettingsViewModel vm) vm.SetDeepSeekKey(DeepSeekKey.Password);
+    }
 }

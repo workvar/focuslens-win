@@ -33,6 +33,12 @@ public sealed class GuideSettings
     /// <summary>Optional OpenAI model id. Empty uses gpt-4o-mini. Used only while OpenAI is the provider.</summary>
     public string OpenAiModel { get; set; } = "";
 
+    /// <summary>Optional NVIDIA model id. Empty uses Llama 3.3 70B. Used only while NVIDIA is the provider.</summary>
+    public string NvidiaModel { get; set; } = "";
+
+    /// <summary>Optional DeepSeek model id. Empty uses deepseek-flash. Used only while DeepSeek is the provider.</summary>
+    public string DeepSeekModel { get; set; } = "";
+
     /// <summary>Off by default: the request text leaves the PC when a search runs.</summary>
     public bool WebSearch { get; set; }
 
@@ -71,6 +77,8 @@ public sealed class GuideSettings
         {
             AiProvider.Claude => options with { Model = Blank(AnthropicModel) },
             AiProvider.OpenAi => options with { Model = Blank(OpenAiModel) },
+            AiProvider.Nvidia => options with { Model = Blank(NvidiaModel) },
+            AiProvider.DeepSeek => options with { Model = Blank(DeepSeekModel) },
             _ => options with { OllamaModel = PlannerModel },
         };
     }

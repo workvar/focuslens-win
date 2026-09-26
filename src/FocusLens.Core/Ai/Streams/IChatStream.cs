@@ -38,7 +38,10 @@ internal static class ChatStreamHelpers
         return messages;
     }
 
-    public static void CheckStatus(HttpResponseMessage response)
+    public static void CheckStatus(HttpResponseMessage response) => CheckStatus(response, null);
+
+    /// <summary>On a rejected request, <paramref name="body"/> supplies the provider's own message.</summary>
+    public static void CheckStatus(HttpResponseMessage response, string? body)
     {
         var code = (int)response.StatusCode;
         if (code is >= 200 and < 300) return;
@@ -47,8 +50,45 @@ internal static class ChatStreamHelpers
             401 or 403 => new AiException(AiErrorKind.Unauthorized),
             429 => new AiException(AiErrorKind.RateLimited),
             >= 500 and < 600 => new AiException(AiErrorKind.ServerError, code.ToString()),
-            _ => new AiException(AiErrorKind.Api, $"HTTP {code}"),
+            _ => new AiException(AiErrorKind.Api, ProviderMessage(body) ?? $"HTTP {code}"),
         };
+    }
+
+    /// <summary>Reads a failed response and throws. A success response is left unread for streaming.</summary>
+    public static async Task EnsureSuccessAsync(HttpResponseMessage response, CancellationToken ct)
+    {
+        if (response.IsSuccessStatusCode) return;
+        string? body = null;
+        try { body = await response.Content.ReadAsStringAsync(ct); }
+        catch (Exception) when (!ct.IsCancellationRequested) { }
+        CheckStatus(response, body);
+    }
+
+    /// <summary>Sonnet 5 thinks unless the request turns it off. Sonnet 4.6 is already off.</summary>
+    public static bool ClaudeThinkingDefaultsOn(string model) =>
+        model.Contains("sonnet-5", StringComparison.OrdinalIgnoreCase);
+
+    private static string? ProviderMessage(string? body)
+    {
+        if (string.IsNullOrWhiteSpace(body)) return null;
+        try
+        {
+            using var doc = JsonDocument.Parse(body);
+            if (!doc.RootElement.TryGetProperty("error", out var error)) return null;
+            var text = error.ValueKind switch
+            {
+                JsonValueKind.Object when error.TryGetProperty("message", out var message) => message.GetString(),
+                JsonValueKind.String => error.GetString(),
+                _ => null,
+            };
+            text = text?.Trim();
+            if (string.IsNullOrEmpty(text)) return null;
+            return text.Length > 180 ? text[..180] + "…" : text;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
     }
 
     public static async Task<HttpResponseMessage> SendAsync(

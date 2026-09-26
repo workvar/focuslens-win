@@ -7,7 +7,7 @@
             <Border Style="{StaticResource Card}">
                 <StackPanel>
                     <TextBlock Text="Model provider" Style="{StaticResource Heading}" />
-                    <ComboBox ItemsSource="{Binding Providers}" SelectedIndex="{Binding ProviderIndex}" Width="260" HorizontalAlignment="Left" Margin="0,10,0,0" />
+                    <ComboBox ItemsSource="{Binding Providers}" SelectedIndex="{Binding ProviderIndex}" Width="280" HorizontalAlignment="Left" Margin="0,10,0,0" />
 
                     <StackPanel Margin="0,16,0,0" Visibility="{Binding IsOllama, Converter={StaticResource BoolToVisibility}}">
                         <TextBlock Text="Ollama host" Style="{StaticResource Muted}" FontSize="12" />
@@ -41,6 +41,20 @@
                         <PasswordBox x:Name="OpenAiKey" Margin="0,4,0,0" PasswordChanged="OnOpenAiKeyChanged" />
                         <TextBlock Text="A key is saved (encrypted for your Windows account)." Style="{StaticResource Muted}" FontSize="12" Margin="0,6,0,0"
                                    Visibility="{Binding HasOpenAiKey, Converter={StaticResource BoolToVisibility}}" />
+                    </StackPanel>
+
+                    <StackPanel Margin="0,16,0,0" Visibility="{Binding IsNvidia, Converter={StaticResource BoolToVisibility}}">
+                        <TextBlock Text="NVIDIA API key" Style="{StaticResource Muted}" FontSize="12" />
+                        <PasswordBox x:Name="NvidiaKey" Margin="0,4,0,0" PasswordChanged="OnNvidiaKeyChanged" />
+                        <TextBlock Text="A key is saved (encrypted for your Windows account)." Style="{StaticResource Muted}" FontSize="12" Margin="0,6,0,0"
+                                   Visibility="{Binding HasNvidiaKey, Converter={StaticResource BoolToVisibility}}" />
+                    </StackPanel>
+
+                    <StackPanel Margin="0,16,0,0" Visibility="{Binding IsDeepSeek, Converter={StaticResource BoolToVisibility}}">
+                        <TextBlock Text="DeepSeek API key" Style="{StaticResource Muted}" FontSize="12" />
+                        <PasswordBox x:Name="DeepSeekKey" Margin="0,4,0,0" PasswordChanged="OnDeepSeekKeyChanged" />
+                        <TextBlock Text="A key is saved (encrypted for your Windows account)." Style="{StaticResource Muted}" FontSize="12" Margin="0,6,0,0"
+                                   Visibility="{Binding HasDeepSeekKey, Converter={StaticResource BoolToVisibility}}" />
                     </StackPanel>
 
                     <TextBlock Style="{StaticResource Muted}" Margin="0,14,0,0" FontSize="12"

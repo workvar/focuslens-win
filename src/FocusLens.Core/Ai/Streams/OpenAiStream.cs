@@ -5,12 +5,26 @@ using FocusLens.Core.Models;
 
 namespace FocusLens.Core.Ai.Streams;
 
-/// <summary>OpenAI chat completions, server-sent events.</summary>
+public enum ChatCompletionsKind { OpenAi, Nvidia, DeepSeek }
+
+/// <summary>OpenAI-compatible chat completions (OpenAI, NVIDIA NIM, DeepSeek), server-sent events.</summary>
 public sealed class OpenAiStream : IChatStream
 {
     private readonly string _apiKey;
+    private readonly string _endpoint;
+    private readonly string _defaultModel;
+    private readonly ChatCompletionsKind _kind;
 
-    public OpenAiStream(string apiKey) => _apiKey = apiKey;
+    public OpenAiStream(string apiKey)
+        : this(apiKey, "https://api.openai.com/v1/chat/completions", "gpt-4o-mini", ChatCompletionsKind.OpenAi) { }
+
+    public OpenAiStream(string apiKey, string endpoint, string defaultModel, ChatCompletionsKind kind)
+    {
+        _apiKey = apiKey;
+        _endpoint = endpoint;
+        _defaultModel = defaultModel;
+        _kind = kind;
+    }
 
     public async IAsyncEnumerable<string> StreamAsync(
         HttpClient http, string prompt, IReadOnlyList<Message> history, AiRequestOptions options,
@@ -18,8 +32,11 @@ public sealed class OpenAiStream : IChatStream
     {
         if (string.IsNullOrEmpty(_apiKey)) throw new AiException(AiErrorKind.MissingApiKey);
 
-        var model = ChatStreamHelpers.ChosenModel(options.Model, "gpt-4o-mini");
+        var model = ChatStreamHelpers.ChosenModel(options.Model, _defaultModel);
         var reasoning = ChatStreamHelpers.IsReasoningModel(model);
+        // NVIDIA's DeepSeek builds hang unless thinking is turned on in the request.
+        var nvidiaDeepSeek = _kind == ChatCompletionsKind.Nvidia
+            && model.Contains("deepseek", StringComparison.OrdinalIgnoreCase);
         var body = new Dictionary<string, object>
         {
             ["model"] = model,
@@ -28,17 +45,28 @@ public sealed class OpenAiStream : IChatStream
         };
         if (options.MaxTokens is { } maxTokens)
             body[reasoning ? "max_completion_tokens" : "max_tokens"] = maxTokens;
-        if (options.Temperature is { } temperature && !reasoning) body["temperature"] = temperature;
+        if (options.Temperature is { } temperature && !reasoning && !nvidiaDeepSeek)
+            body["temperature"] = temperature;
         if (options.DisableThinking && reasoning) body["reasoning_effort"] = "none";
+        // DeepSeek thinks unless told not to. Guide and Focus set this so a short answer
+        // is not spent on a chain of thought. Chat leaves it at the default.
+        if (_kind == ChatCompletionsKind.DeepSeek && options.DisableThinking)
+            body["thinking"] = new Dictionary<string, object> { ["type"] = "disabled" };
+        if (nvidiaDeepSeek)
+            body["chat_template_kwargs"] = new Dictionary<string, object>
+            {
+                ["enable_thinking"] = true,
+                ["thinking"] = true,
+            };
 
-        using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.openai.com/v1/chat/completions")
+        using var request = new HttpRequestMessage(HttpMethod.Post, _endpoint)
         {
             Content = JsonContent.Create(body),
         };
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
 
         using var response = await ChatStreamHelpers.SendAsync(http, request, ct);
-        ChatStreamHelpers.CheckStatus(response);
+        await ChatStreamHelpers.EnsureSuccessAsync(response, ct);
 
         await foreach (var line in ChatStreamHelpers.ReadLinesAsync(response, ct))
         {

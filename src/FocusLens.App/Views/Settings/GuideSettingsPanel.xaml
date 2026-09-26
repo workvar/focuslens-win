@@ -77,6 +77,16 @@
                         <TextBlock Style="{StaticResource FocusCaption}"
                                    Text="Used while OpenAI is the provider on the AI tab. Leave empty for gpt-4o-mini. What is on your screen is sent to that provider." />
                     </StackPanel>
+                    <StackPanel x:Name="NvidiaModelRow" Visibility="Collapsed">
+                        <TextBox x:Name="NvidiaModel" LostFocus="OnChanged" AutomationProperties.Name="NVIDIA model for planning" />
+                        <TextBlock Style="{StaticResource FocusCaption}"
+                                   Text="Used while NVIDIA is the provider on the AI tab. Leave empty for Llama 3.3 70B. What is on your screen is sent to that provider." />
+                    </StackPanel>
+                    <StackPanel x:Name="DeepSeekModelRow" Visibility="Collapsed">
+                        <TextBox x:Name="DeepSeekModel" LostFocus="OnChanged" AutomationProperties.Name="DeepSeek model for planning" />
+                        <TextBlock Style="{StaticResource FocusCaption}"
+                                   Text="Used while DeepSeek is the provider on the AI tab. Leave empty for deepseek-flash. What is on your screen is sent to that provider." />
+                    </StackPanel>
                 </StackPanel>
             </Border>
         </StackPanel>

@@ -29,7 +29,7 @@
                     <CheckBox Content="Start FocusLens tracking when I sign in to Windows" IsChecked="{Binding StartWithWindows}" Margin="0,16,0,0" />
                     <StackPanel Visibility="{Binding CanSignIn, Converter={StaticResource BoolToVisibility}}" Margin="0,16,0,0">
                         <TextBlock Style="{StaticResource Muted}"
-                                   Text="Optional: sign in with Google to identify your account. Your activity data never leaves this PC." />
+                                   Text="Optional. Sign in with Google to identify your account. An Anthropic, OpenAI, NVIDIA, or DeepSeek key is entered in Settings and does not need an account. Your activity data never leaves this PC." />
                         <Button Content="Sign in with Google" Command="{Binding SignInCommand}" HorizontalAlignment="Left" Margin="0,10,0,0" />
                         <TextBlock Text="{Binding Auth.AuthError}" Foreground="{DynamicResource DangerBrush}" Margin="0,8,0,0"
                                    Visibility="{Binding Auth.AuthError, Converter={StaticResource NotNullToVisibility}}" />

@@ -8,6 +8,8 @@ public enum AiProviderKind
     Claude,
     OpenAi,
     Ollama,
+    Nvidia,
+    DeepSeek,
 }
 
 /// <summary>
@@ -31,6 +33,8 @@ public sealed class AiSettings
     {
         public const string Claude = "ai.claude.apiKey";
         public const string OpenAi = "ai.openai.apiKey";
+        public const string Nvidia = "ai.nvidia.apiKey";
+        public const string DeepSeek = "ai.deepseek.apiKey";
     }
 
     public static AiSettings Load() => JsonFile.Load(AppPaths.AiSettingsFile, () => new AiSettings());
@@ -46,6 +50,8 @@ public sealed class AiSettings
         {
             AiProviderKind.Claude => new AiProvider.Claude(Key(SecretNames.Claude)),
             AiProviderKind.OpenAi => new AiProvider.OpenAi(Key(SecretNames.OpenAi)),
+            AiProviderKind.Nvidia => new AiProvider.Nvidia(Key(SecretNames.Nvidia)),
+            AiProviderKind.DeepSeek => new AiProvider.DeepSeek(Key(SecretNames.DeepSeek)),
             _ => new AiProvider.Ollama(OllamaHost, OllamaModel),
         };
     }

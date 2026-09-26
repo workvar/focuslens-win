@@ -17,6 +17,8 @@ public sealed partial class AiSettingsViewModel : ObservableObject
     [ObservableProperty] private string _ollamaModel;
     [ObservableProperty] private bool _hasClaudeKey;
     [ObservableProperty] private bool _hasOpenAiKey;
+    [ObservableProperty] private bool _hasNvidiaKey;
+    [ObservableProperty] private bool _hasDeepSeekKey;
     [ObservableProperty] private string? _testResult;
     [ObservableProperty] private bool _isTesting;
     [ObservableProperty] private bool _isLoadingModels;
@@ -25,10 +27,12 @@ public sealed partial class AiSettingsViewModel : ObservableObject
     /// <summary>Models installed in Ollama, for the searchable dropdown. Free text is still accepted.</summary>
     public ObservableCollection<string> AvailableModels { get; } = new();
 
-    public IReadOnlyList<string> Providers { get; } = new[] { "Ollama (local, private)", "Claude", "OpenAI" };
+    public IReadOnlyList<string> Providers { get; } = new[] { "Ollama (local, private)", "Claude", "OpenAI", "NVIDIA", "DeepSeek" };
     public bool IsOllama => ProviderIndex == 0;
     public bool IsClaude => ProviderIndex == 1;
     public bool IsOpenAi => ProviderIndex == 2;
+    public bool IsNvidia => ProviderIndex == 3;
+    public bool IsDeepSeek => ProviderIndex == 4;
     public bool IsCloud => ProviderIndex != 0;
 
     public AiSettingsViewModel(AiSettings settings, ISecretStore secrets, StreamingAiClient client)
@@ -40,22 +44,35 @@ public sealed partial class AiSettingsViewModel : ObservableObject
         {
             AiProviderKind.Claude => 1,
             AiProviderKind.OpenAi => 2,
+            AiProviderKind.Nvidia => 3,
+            AiProviderKind.DeepSeek => 4,
             _ => 0,
         };
         _ollamaHost = settings.OllamaHost;
         _ollamaModel = settings.OllamaModel;
         _hasClaudeKey = !string.IsNullOrEmpty(secrets.Get(AiSettings.SecretNames.Claude));
         _hasOpenAiKey = !string.IsNullOrEmpty(secrets.Get(AiSettings.SecretNames.OpenAi));
+        _hasNvidiaKey = !string.IsNullOrEmpty(secrets.Get(AiSettings.SecretNames.Nvidia));
+        _hasDeepSeekKey = !string.IsNullOrEmpty(secrets.Get(AiSettings.SecretNames.DeepSeek));
         _ = RefreshModelsAsync();
     }
 
     partial void OnProviderIndexChanged(int value)
     {
-        _settings.Provider = value switch { 1 => AiProviderKind.Claude, 2 => AiProviderKind.OpenAi, _ => AiProviderKind.Ollama };
+        _settings.Provider = value switch
+        {
+            1 => AiProviderKind.Claude,
+            2 => AiProviderKind.OpenAi,
+            3 => AiProviderKind.Nvidia,
+            4 => AiProviderKind.DeepSeek,
+            _ => AiProviderKind.Ollama,
+        };
         _settings.Save();
         OnPropertyChanged(nameof(IsOllama));
         OnPropertyChanged(nameof(IsClaude));
         OnPropertyChanged(nameof(IsOpenAi));
+        OnPropertyChanged(nameof(IsNvidia));
+        OnPropertyChanged(nameof(IsDeepSeek));
         OnPropertyChanged(nameof(IsCloud));
         TestResult = null;
         if (value == 0) _ = RefreshModelsAsync();
@@ -80,6 +97,18 @@ public sealed partial class AiSettingsViewModel : ObservableObject
     {
         _secrets.Set(AiSettings.SecretNames.OpenAi, key.Trim());
         HasOpenAiKey = key.Trim().Length > 0;
+    }
+
+    public void SetNvidiaKey(string key)
+    {
+        _secrets.Set(AiSettings.SecretNames.Nvidia, key.Trim());
+        HasNvidiaKey = key.Trim().Length > 0;
+    }
+
+    public void SetDeepSeekKey(string key)
+    {
+        _secrets.Set(AiSettings.SecretNames.DeepSeek, key.Trim());
+        HasDeepSeekKey = key.Trim().Length > 0;
     }
 
     /// <summary>Asks the running Ollama which models are installed. Safe to call any time; failures just empty the list.</summary>

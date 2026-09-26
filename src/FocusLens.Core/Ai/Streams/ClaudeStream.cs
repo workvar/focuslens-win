@@ -17,17 +17,26 @@ public sealed class ClaudeStream : IChatStream
     {
         if (string.IsNullOrEmpty(_apiKey)) throw new AiException(AiErrorKind.MissingApiKey);
 
+        var model = ChatStreamHelpers.ChosenModel(options.Model, "claude-sonnet-4-6");
         var body = new Dictionary<string, object>
         {
-            ["model"] = ChatStreamHelpers.ChosenModel(options.Model, "claude-sonnet-4-6"),
+            ["model"] = model,
             ["max_tokens"] = options.MaxTokens ?? 1024,
             ["stream"] = true,
             ["messages"] = ChatStreamHelpers.ChatMessages(history, prompt),
         };
-        if (options.Temperature is { } temperature) body["temperature"] = temperature;
-        // Off by default on Sonnet 4.6, and required to keep later models from spending a short
-        // max_tokens budget on hidden reasoning.
-        if (options.DisableThinking) body["thinking"] = new Dictionary<string, object> { ["type"] = "disabled" };
+        // Sonnet 4.6 already thinks off. Sending thinking next to temperature (what Guide and
+        // Focus set) is a 400. Chat omits both and succeeds. Sonnet 5 thinks unless told not to,
+        // and rejects a non-default temperature.
+        if (options.DisableThinking)
+        {
+            if (ChatStreamHelpers.ClaudeThinkingDefaultsOn(model))
+                body["thinking"] = new Dictionary<string, object> { ["type"] = "disabled" };
+        }
+        else if (options.Temperature is { } temperature)
+        {
+            body["temperature"] = temperature;
+        }
 
         using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.anthropic.com/v1/messages")
         {
@@ -37,7 +46,7 @@ public sealed class ClaudeStream : IChatStream
         request.Headers.Add("anthropic-version", "2023-06-01");
 
         using var response = await ChatStreamHelpers.SendAsync(http, request, ct);
-        ChatStreamHelpers.CheckStatus(response);
+        await ChatStreamHelpers.EnsureSuccessAsync(response, ct);
 
         await foreach (var line in ChatStreamHelpers.ReadLinesAsync(response, ct))
         {

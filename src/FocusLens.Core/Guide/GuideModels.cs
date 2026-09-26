@@ -35,7 +35,8 @@ public readonly record struct GuideRect(double X, double Y, double Width, double
 
 /// <summary>One thing on screen that UI Automation reported.</summary>
 public sealed record GuideElement(
-    string Role, string Label, GuideRect Frame, string AppName, string? State = null, string? Window = null);
+    string Role, string Label, GuideRect Frame, string AppName, string? State = null, string? Window = null,
+    bool OnPage = false);
 
 /// <summary>
 /// What to do next, given the screen the model was just shown. A guide keeps asking for this as the

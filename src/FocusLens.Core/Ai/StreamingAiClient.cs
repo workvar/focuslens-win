@@ -32,6 +32,12 @@ public sealed class StreamingAiClient
         {
             AiProvider.Claude c => new ClaudeStream(c.ApiKey),
             AiProvider.OpenAi o => new OpenAiStream(o.ApiKey),
+            AiProvider.Nvidia n => new OpenAiStream(
+                n.ApiKey, "https://integrate.api.nvidia.com/v1/chat/completions",
+                "meta/llama-3.3-70b-instruct", ChatCompletionsKind.Nvidia),
+            AiProvider.DeepSeek d => new OpenAiStream(
+                d.ApiKey, "https://api.deepseek.com/chat/completions",
+                "deepseek-flash", ChatCompletionsKind.DeepSeek),
             AiProvider.Ollama l => new OllamaStream(l.Host, l.Model),
             _ => throw new AiException(AiErrorKind.MissingApiKey),
         };

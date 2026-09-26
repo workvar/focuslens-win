@@ -31,6 +31,8 @@ public partial class GuideSettingsPanel : UserControl
         Model.Text = settings.Model;
         AnthropicModel.Text = settings.AnthropicModel;
         OpenAiModel.Text = settings.OpenAiModel;
+        NvidiaModel.Text = settings.NvidiaModel;
+        DeepSeekModel.Text = settings.DeepSeekModel;
         ShowActiveProvider();
         WebSearch.IsChecked = settings.WebSearch;
         SearxUrl.Text = settings.SearxUrl;
@@ -91,6 +93,8 @@ public partial class GuideSettingsPanel : UserControl
         _settings.Model = Model.Text;
         _settings.AnthropicModel = AnthropicModel.Text.Trim();
         _settings.OpenAiModel = OpenAiModel.Text.Trim();
+        _settings.NvidiaModel = NvidiaModel.Text.Trim();
+        _settings.DeepSeekModel = DeepSeekModel.Text.Trim();
         _settings.WebSearch = WebSearch.IsChecked == true;
         _settings.SearxUrl = SearxUrl.Text.Trim();
         _settings.HoldFill = HoldFill.IsChecked == true;
@@ -105,6 +109,8 @@ public partial class GuideSettingsPanel : UserControl
         OllamaModelRow.Visibility = provider == AiProviderKind.Ollama ? Visibility.Visible : Visibility.Collapsed;
         AnthropicModelRow.Visibility = provider == AiProviderKind.Claude ? Visibility.Visible : Visibility.Collapsed;
         OpenAiModelRow.Visibility = provider == AiProviderKind.OpenAi ? Visibility.Visible : Visibility.Collapsed;
+        NvidiaModelRow.Visibility = provider == AiProviderKind.Nvidia ? Visibility.Visible : Visibility.Collapsed;
+        DeepSeekModelRow.Visibility = provider == AiProviderKind.DeepSeek ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private static string SecondsLabel(double seconds) => $"{seconds:0.#} s";

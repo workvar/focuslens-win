@@ -43,6 +43,16 @@
                 <TextBlock Style="{StaticResource FocusCaption}"
                            Text="Used while OpenAI is the provider on the AI tab. Leave empty for gpt-4o-mini." />
             </StackPanel>
+            <StackPanel Visibility="{Binding IsNvidiaModel, Converter={StaticResource BoolToVisibility}}">
+                <TextBox Text="{Binding NvidiaModel, UpdateSourceTrigger=LostFocus}" AutomationProperties.Name="NVIDIA model for focus checks" />
+                <TextBlock Style="{StaticResource FocusCaption}"
+                           Text="Used while NVIDIA is the provider on the AI tab. Leave empty for Llama 3.3 70B." />
+            </StackPanel>
+            <StackPanel Visibility="{Binding IsDeepSeekModel, Converter={StaticResource BoolToVisibility}}">
+                <TextBox Text="{Binding DeepSeekModel, UpdateSourceTrigger=LostFocus}" AutomationProperties.Name="DeepSeek model for focus checks" />
+                <TextBlock Style="{StaticResource FocusCaption}"
+                           Text="Used while DeepSeek is the provider on the AI tab. Leave empty for deepseek-flash." />
+            </StackPanel>
         </StackPanel>
     </StackPanel>
 </UserControl>
