@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Net.Http.Headers;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FocusLens.Core.Ai;
@@ -139,8 +140,7 @@ public sealed partial class AiSettingsViewModel : ObservableObject
         TestResult = "Testing...";
         try
         {
-            var reply = await _client.CompleteAsync("Reply with the single word: ok");
-            TestResult = reply.Trim().Length > 0 ? "Connected." : "The model returned an empty reply.";
+            TestResult = IsOllama ? await TestOllamaAsync() : await TestKeyAsync();
         }
         catch (Exception ex)
         {
@@ -150,5 +150,47 @@ public sealed partial class AiSettingsViewModel : ObservableObject
         {
             IsTesting = false;
         }
+    }
+
+    /// <summary>Asks the provider for its model list. A success means the saved key was accepted.</summary>
+    private async Task<string> TestKeyAsync()
+    {
+        var (name, url, secret, anthropic) = ProviderIndex switch
+        {
+            1 => ("Claude", "https://api.anthropic.com/v1/models", AiSettings.SecretNames.Claude, true),
+            2 => ("OpenAI", "https://api.openai.com/v1/models", AiSettings.SecretNames.OpenAi, false),
+            3 => ("NVIDIA", "https://integrate.api.nvidia.com/v1/models", AiSettings.SecretNames.Nvidia, false),
+            4 => ("DeepSeek", "https://api.deepseek.com/models", AiSettings.SecretNames.DeepSeek, false),
+            _ => ("", "", "", false),
+        };
+        var key = _secrets.Get(secret) ?? "";
+        if (key.Length == 0) return "Enter an API key first.";
+
+        using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
+        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+        if (anthropic)
+        {
+            request.Headers.Add("x-api-key", key);
+            request.Headers.Add("anthropic-version", "2023-06-01");
+        }
+        else
+        {
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", key);
+        }
+
+        using var response = await http.SendAsync(request);
+        var code = (int)response.StatusCode;
+        return code switch
+        {
+            >= 200 and < 300 => "Key accepted.",
+            401 or 403 => "This key was rejected.",
+            _ => $"{name} answered HTTP {code}.",
+        };
+    }
+
+    private async Task<string> TestOllamaAsync()
+    {
+        var reply = await _client.CompleteAsync("Reply with the single word: ok");
+        return reply.Trim().Length > 0 ? "Connected." : "The model returned an empty reply.";
     }
 }
