@@ -68,27 +68,35 @@ internal static class ChatStreamHelpers
     public static bool ClaudeThinkingDefaultsOn(string model) =>
         model.Contains("sonnet-5", StringComparison.OrdinalIgnoreCase);
 
-    private static string? ProviderMessage(string? body)
+    /// <summary>A short reason from an error body. NVIDIA uses <c>detail</c>; others use <c>error.message</c>.</summary>
+    public static string? ProviderMessage(string? body)
     {
         if (string.IsNullOrWhiteSpace(body)) return null;
+        var raw = body.Trim();
         try
         {
-            using var doc = JsonDocument.Parse(body);
-            if (!doc.RootElement.TryGetProperty("error", out var error)) return null;
-            var text = error.ValueKind switch
+            using var doc = JsonDocument.Parse(raw);
+            var root = doc.RootElement;
+            string? text = null;
+            if (root.TryGetProperty("error", out var error))
             {
-                JsonValueKind.Object when error.TryGetProperty("message", out var message) => message.GetString(),
-                JsonValueKind.String => error.GetString(),
-                _ => null,
-            };
+                text = error.ValueKind switch
+                {
+                    JsonValueKind.Object when error.TryGetProperty("message", out var message) => message.GetString(),
+                    JsonValueKind.String => error.GetString(),
+                    _ => null,
+                };
+            }
+            if (string.IsNullOrWhiteSpace(text) && root.TryGetProperty("detail", out var detail))
+                text = detail.GetString();
+            if (string.IsNullOrWhiteSpace(text) && root.TryGetProperty("message", out var rootMessage))
+                text = rootMessage.GetString();
             text = text?.Trim();
-            if (string.IsNullOrEmpty(text)) return null;
-            return text.Length > 180 ? text[..180] + "…" : text;
+            if (!string.IsNullOrEmpty(text))
+                return text.Length > 180 ? text[..180] + "…" : text;
         }
-        catch (JsonException)
-        {
-            return null;
-        }
+        catch (JsonException) { }
+        return raw.Length > 180 ? raw[..180] + "…" : raw;
     }
 
     public static async Task<HttpResponseMessage> SendAsync(

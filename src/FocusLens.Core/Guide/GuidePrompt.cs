@@ -106,7 +106,7 @@ public static class GuidePrompt
         var text = SummaryLines(chrome, chromeBudget);
         if (page.Count > 0)
         {
-            var used = text.Length == 0 ? 0 : text.Split('\n').Length;
+            var used = text.Length == 0 ? 0 : text.ToString().Split('\n').Length;
             var rest = MaxContextLines - used;
             if (rest > 0)
             {

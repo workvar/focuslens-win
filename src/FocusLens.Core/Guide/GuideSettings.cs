@@ -33,7 +33,7 @@ public sealed class GuideSettings
     /// <summary>Optional OpenAI model id. Empty uses gpt-4o-mini. Used only while OpenAI is the provider.</summary>
     public string OpenAiModel { get; set; } = "";
 
-    /// <summary>Optional NVIDIA model id. Empty uses Llama 3.3 70B. Used only while NVIDIA is the provider.</summary>
+    /// <summary>Optional NVIDIA model id. Empty uses Nemotron 3 Super. Used only while NVIDIA is the provider.</summary>
     public string NvidiaModel { get; set; } = "";
 
     /// <summary>Optional DeepSeek model id. Empty uses deepseek-flash. Used only while DeepSeek is the provider.</summary>

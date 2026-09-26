@@ -1,8 +1,10 @@
 using System.Collections.ObjectModel;
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FocusLens.Core.Ai;
+using FocusLens.Core.Ai.Streams;
 
 namespace FocusLens.App.ViewModels.Settings;
 
@@ -152,22 +154,32 @@ public sealed partial class AiSettingsViewModel : ObservableObject
         }
     }
 
-    /// <summary>Asks the provider for its model list. A success means the saved key was accepted.</summary>
+    /// <summary>
+    /// Sends the same kind of request chat does, with the default model.
+    /// A model list can accept a key while chat returns 410 for a retired model.
+    /// </summary>
     private async Task<string> TestKeyAsync()
     {
-        var (name, url, secret, anthropic) = ProviderIndex switch
+        var (name, url, model, secret, anthropic) = ProviderIndex switch
         {
-            1 => ("Claude", "https://api.anthropic.com/v1/models", AiSettings.SecretNames.Claude, true),
-            2 => ("OpenAI", "https://api.openai.com/v1/models", AiSettings.SecretNames.OpenAi, false),
-            3 => ("NVIDIA", "https://integrate.api.nvidia.com/v1/models", AiSettings.SecretNames.Nvidia, false),
-            4 => ("DeepSeek", "https://api.deepseek.com/models", AiSettings.SecretNames.DeepSeek, false),
-            _ => ("", "", "", false),
+            1 => ("Claude", "https://api.anthropic.com/v1/messages", StreamingAiClient.Models.Claude, AiSettings.SecretNames.Claude, true),
+            2 => ("OpenAI", "https://api.openai.com/v1/chat/completions", StreamingAiClient.Models.OpenAi, AiSettings.SecretNames.OpenAi, false),
+            3 => ("NVIDIA", "https://integrate.api.nvidia.com/v1/chat/completions", StreamingAiClient.Models.Nvidia, AiSettings.SecretNames.Nvidia, false),
+            4 => ("DeepSeek", "https://api.deepseek.com/chat/completions", StreamingAiClient.Models.DeepSeek, AiSettings.SecretNames.DeepSeek, false),
+            _ => ("", "", "", "", false),
         };
         var key = _secrets.Get(secret) ?? "";
         if (key.Length == 0) return "Enter an API key first.";
 
-        using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
-        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+        var body = new Dictionary<string, object>
+        {
+            ["model"] = model,
+            ["messages"] = new[] { new Dictionary<string, string> { ["role"] = "user", ["content"] = "Reply with ok" } },
+        };
+        body["max_tokens"] = 16;
+
+        using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(20) };
+        using var request = new HttpRequestMessage(HttpMethod.Post, url) { Content = JsonContent.Create(body) };
         if (anthropic)
         {
             request.Headers.Add("x-api-key", key);
@@ -179,13 +191,11 @@ public sealed partial class AiSettingsViewModel : ObservableObject
         }
 
         using var response = await http.SendAsync(request);
+        if (response.IsSuccessStatusCode) return "Key accepted.";
+        var payload = await response.Content.ReadAsStringAsync();
         var code = (int)response.StatusCode;
-        return code switch
-        {
-            >= 200 and < 300 => "Key accepted.",
-            401 or 403 => "This key was rejected.",
-            _ => $"{name} answered HTTP {code}.",
-        };
+        if (code is 401 or 403) return "This key was rejected.";
+        return ChatStreamHelpers.ProviderMessage(payload) ?? $"{name} answered HTTP {code}.";
     }
 
     private async Task<string> TestOllamaAsync()

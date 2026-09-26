@@ -9,6 +9,16 @@ namespace FocusLens.Core.Ai;
 /// </summary>
 public sealed class StreamingAiClient
 {
+    /// <summary>Built-in model ids. Chat uses these when no override is saved.</summary>
+    public static class Models
+    {
+        public const string Claude = "claude-sonnet-4-6";
+        public const string OpenAi = "gpt-4o-mini";
+        /// <summary>Llama 3.3 70B's free NVIDIA endpoint now returns 410 Gone.</summary>
+        public const string Nvidia = "nvidia/nemotron-3-super-120b-a12b";
+        public const string DeepSeek = "deepseek-flash";
+    }
+
     private readonly Func<AiProvider> _providerSource;
     private readonly HttpClient _http;
 
@@ -34,10 +44,10 @@ public sealed class StreamingAiClient
             AiProvider.OpenAi o => new OpenAiStream(o.ApiKey),
             AiProvider.Nvidia n => new OpenAiStream(
                 n.ApiKey, "https://integrate.api.nvidia.com/v1/chat/completions",
-                "meta/llama-3.3-70b-instruct", ChatCompletionsKind.Nvidia),
+                Models.Nvidia, ChatCompletionsKind.Nvidia),
             AiProvider.DeepSeek d => new OpenAiStream(
                 d.ApiKey, "https://api.deepseek.com/chat/completions",
-                "deepseek-flash", ChatCompletionsKind.DeepSeek),
+                Models.DeepSeek, ChatCompletionsKind.DeepSeek),
             AiProvider.Ollama l => new OllamaStream(l.Host, l.Model),
             _ => throw new AiException(AiErrorKind.MissingApiKey),
         };
