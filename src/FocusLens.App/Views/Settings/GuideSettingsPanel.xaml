@@ -62,9 +62,21 @@
             <Border Style="{StaticResource Card}" Margin="0,0,0,12">
                 <StackPanel>
                     <TextBlock Text="Model for planning" Style="{StaticResource Heading}" Margin="0,0,0,10" />
-                    <TextBox x:Name="Model" LostFocus="OnChanged" AutomationProperties.Name="Ollama model for planning" />
-                    <TextBlock Style="{StaticResource FocusCaption}"
-                               Text="Optional Ollama model. Leave empty to use the model from the AI tab. A small one such as qwen2.5:3b is enough. What is on your screen goes to the model you choose, so a local one keeps it on this PC." />
+                    <StackPanel x:Name="OllamaModelRow">
+                        <TextBox x:Name="Model" LostFocus="OnChanged" AutomationProperties.Name="Ollama model for planning" />
+                        <TextBlock Style="{StaticResource FocusCaption}"
+                                   Text="Used while Ollama is the provider on the AI tab. Leave empty to use that tab's model. A small one such as qwen2.5:3b is enough, and the screen stays on this PC." />
+                    </StackPanel>
+                    <StackPanel x:Name="AnthropicModelRow" Visibility="Collapsed">
+                        <TextBox x:Name="AnthropicModel" LostFocus="OnChanged" AutomationProperties.Name="Anthropic model for planning" />
+                        <TextBlock Style="{StaticResource FocusCaption}"
+                                   Text="Used while Anthropic is the provider on the AI tab. Leave empty for Claude Sonnet. What is on your screen is sent to that provider." />
+                    </StackPanel>
+                    <StackPanel x:Name="OpenAiModelRow" Visibility="Collapsed">
+                        <TextBox x:Name="OpenAiModel" LostFocus="OnChanged" AutomationProperties.Name="OpenAI model for planning" />
+                        <TextBlock Style="{StaticResource FocusCaption}"
+                                   Text="Used while OpenAI is the provider on the AI tab. Leave empty for gpt-4o-mini. What is on your screen is sent to that provider." />
+                    </StackPanel>
                 </StackPanel>
             </Border>
         </StackPanel>

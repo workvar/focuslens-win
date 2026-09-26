@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using FocusLens.Core.Ai;
 using FocusLens.Core.Focus;
 
 namespace FocusLens.App.ViewModels.Focus;
@@ -17,6 +18,11 @@ public sealed partial class FocusSettingsViewModel : ObservableObject
     [ObservableProperty] private bool _pauseWhenIdle;
     [ObservableProperty] private FocusVisualEffects _visualEffects;
     [ObservableProperty] private string _model;
+    [ObservableProperty] private string _anthropicModel;
+    [ObservableProperty] private string _openAiModel;
+    [ObservableProperty] private bool _isOllamaModel = true;
+    [ObservableProperty] private bool _isAnthropicModel;
+    [ObservableProperty] private bool _isOpenAiModel;
     [ObservableProperty] private int _patienceSeconds;
     [ObservableProperty] private int _countdownSeconds;
     [ObservableProperty] private string _allowlist;
@@ -30,6 +36,9 @@ public sealed partial class FocusSettingsViewModel : ObservableObject
         _pauseWhenIdle = settings.PauseWhenIdle;
         _visualEffects = settings.VisualEffects;
         _model = settings.Model;
+        _anthropicModel = settings.AnthropicModel;
+        _openAiModel = settings.OpenAiModel;
+        RefreshProvider();
         _patienceSeconds = settings.Patience;
         _countdownSeconds = settings.Countdown;
         _allowlist = settings.Allowlist;
@@ -54,6 +63,17 @@ public sealed partial class FocusSettingsViewModel : ObservableObject
     partial void OnPauseWhenIdleChanged(bool value) => Save(s => s.PauseWhenIdle = value);
     partial void OnVisualEffectsChanged(FocusVisualEffects value) => Save(s => s.VisualEffects = value);
     partial void OnModelChanged(string value) => Save(s => s.Model = value.Trim());
+    partial void OnAnthropicModelChanged(string value) => Save(s => s.AnthropicModel = value.Trim());
+    partial void OnOpenAiModelChanged(string value) => Save(s => s.OpenAiModel = value.Trim());
+
+    /// <summary>Shows the model field for the provider selected on the AI tab.</summary>
+    public void RefreshProvider()
+    {
+        var provider = AiSettings.Load().Provider;
+        IsOllamaModel = provider == AiProviderKind.Ollama;
+        IsAnthropicModel = provider == AiProviderKind.Claude;
+        IsOpenAiModel = provider == AiProviderKind.OpenAi;
+    }
     partial void OnAllowlistChanged(string value) => Save(s => s.Allowlist = value);
 
     partial void OnPatienceSecondsChanged(int value)

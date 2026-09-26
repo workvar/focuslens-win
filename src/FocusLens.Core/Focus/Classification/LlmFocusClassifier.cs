@@ -71,7 +71,7 @@ public sealed class LlmFocusClassifier : IFocusClassifier
 
     private async Task<FocusVerdict> AskAsync(string goal, FocusContext context)
     {
-        var options = AiRequestOptions.Classification with { OllamaModel = _settings.FocusModel };
+        var options = _settings.ClassificationOptions(_client.Provider);
         using var cts = new CancellationTokenSource(Timeout);
         var text = new StringBuilder();
         try

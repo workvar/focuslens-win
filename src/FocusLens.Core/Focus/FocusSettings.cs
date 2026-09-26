@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using FocusLens.Core.Ai;
 using FocusLens.Core.Paths;
 using FocusLens.Core.Storage;
 
@@ -38,8 +39,12 @@ public sealed class FocusSettings
     public int PollSeconds { get; set; } = DefaultPoll;
     public bool PauseWhenIdle { get; set; } = true;
     public FocusVisualEffects VisualEffects { get; set; } = FocusVisualEffects.Automatic;
-    /// <summary>An Ollama model just for focus checks. Empty uses the AI tab's model.</summary>
+    /// <summary>An Ollama model just for focus checks. Empty uses the AI tab's model. Used only while Ollama is the provider.</summary>
     public string Model { get; set; } = "";
+    /// <summary>Optional Claude model id for focus checks. Empty uses Claude Sonnet. Used only while Anthropic is the provider.</summary>
+    public string AnthropicModel { get; set; } = "";
+    /// <summary>Optional OpenAI model id for focus checks. Empty uses gpt-4o-mini. Used only while OpenAI is the provider.</summary>
+    public string OpenAiModel { get; set; } = "";
     /// <summary>Where the user left the floating widget (top-left corner), if they moved it.</summary>
     public double? WidgetLeft { get; set; }
     public double? WidgetTop { get; set; }
@@ -50,7 +55,25 @@ public sealed class FocusSettings
     [JsonIgnore] public int PollInterval => Math.Clamp(PollSeconds, 2, 30);
     [JsonIgnore] public int Countdown => Math.Clamp(CountdownSeconds, 3, 15);
     [JsonIgnore] public int Patience => Math.Clamp(PatienceSeconds, 15, 180);
-    [JsonIgnore] public string? FocusModel => string.IsNullOrWhiteSpace(Model) ? null : Model.Trim();
+    [JsonIgnore] public string? FocusModel => Blank(Model);
+
+    /// <summary>Classification request with the model override for the provider that is enabled.</summary>
+    public AiRequestOptions ClassificationOptions(AiProvider provider)
+    {
+        var options = AiRequestOptions.Classification;
+        return provider switch
+        {
+            AiProvider.Claude => options with { Model = Blank(AnthropicModel) },
+            AiProvider.OpenAi => options with { Model = Blank(OpenAiModel) },
+            _ => options with { OllamaModel = FocusModel },
+        };
+    }
+
+    private static string? Blank(string? value)
+    {
+        var trimmed = value?.Trim() ?? "";
+        return trimmed.Length == 0 ? null : trimmed;
+    }
 
     [JsonIgnore] public IReadOnlyList<string> AllowlistEntries => Allowlist
         .Split(new[] { ',', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)

@@ -14,6 +14,20 @@ public interface IChatStream
 
 internal static class ChatStreamHelpers
 {
+    /// <summary>A non-empty override, otherwise the provider's built-in model.</summary>
+    public static string ChosenModel(string? model, string fallback)
+    {
+        var trimmed = model?.Trim() ?? "";
+        return trimmed.Length == 0 ? fallback : trimmed;
+    }
+
+    /// <summary>gpt-5 and the o-series accept reasoning controls. gpt-4o and gpt-4.1 reject them.</summary>
+    public static bool IsReasoningModel(string model)
+    {
+        var name = model.ToLowerInvariant();
+        return name.StartsWith("gpt-5") || name.StartsWith("o1") || name.StartsWith("o3") || name.StartsWith("o4");
+    }
+
     /// <summary>History plus the new prompt as role/content pairs.</summary>
     public static List<object> ChatMessages(IReadOnlyList<Message> history, string prompt)
     {

@@ -14,8 +14,8 @@ namespace FocusLens.App.Services.Guide;
 /// Every step is resolved against the live screen when it starts and re-checked once a second
 /// while it waits, so the cursor follows a window the user drags and notices when the target has
 /// gone. A step ends when the user clicks its target, presses Return (typing steps), or asks to
-/// skip. If the target is missing but the next step's target has appeared, the user got there
-/// another way and the step counts as done.
+/// skip. A label the model invented is never shown. A click that leaves the screen unchanged
+/// is not repeated.
 /// </summary>
 public sealed class GuideSessionController
 {
@@ -88,6 +88,14 @@ public sealed class GuideSessionController
             var plans = 0;
             var actions = 0;
             var misses = 0;
+            var ungrounded = 0;
+            // Labels the model just invented. Passed back so the next reply cannot reuse them.
+            IReadOnlyList<string> rejected = Array.Empty<string>();
+            // A control the user already used when that click left the screen the same, and the screen
+            // as it was then. A later snapshot that differs means the click did land, so that label may
+            // be used again.
+            string? stuckLabel = null;
+            string? stuckFingerprint = null;
             // The first step of a fresh plan is allowed a moment to appear. Later steps were named
             // against an older screen, so a missing control means replan now.
             var fresh = true;
@@ -104,8 +112,13 @@ public sealed class GuideSessionController
                     _cursor.Follow(plans == 0 ? "Looking at the screen..." : "Checking the screen...");
                     SetPhase(new GuidePhase(GuidePhaseKind.Planning));
                     var screen = await _walker.SnapshotAsync();
+                    if (stuckFingerprint is { } stuckKey && GuideElementMatcher.Fingerprint(screen) != stuckKey)
+                    {
+                        stuckLabel = null;
+                        stuckFingerprint = null;
+                    }
                     GuidePlan plan;
-                    try { plan = await _planner.PlanAsync(request, done, missed, screen, ct); }
+                    try { plan = await _planner.PlanAsync(request, done, missed, screen, stuckLabel, rejected, ct); }
                     catch (Exception ex) when (ex is not OperationCanceledException)
                     {
                         await FailAsync("I could not plan that. Try asking again.", ct);
@@ -123,39 +136,77 @@ public sealed class GuideSessionController
                             await FailAsync(plan.Note ?? "I can't go further from this screen.", ct);
                             return;
                         default:
-                            ahead.AddRange(plan.Steps);
-                            if (ahead.Count == 0)
+                            var grounded = GuideElementMatcher.Grounded(plan.Steps, screen);
+                            if (grounded.Count == 0)
                             {
-                                await FailAsync("I could not see a next step on screen.", ct);
+                                rejected = GuideElementMatcher.InventedLabels(plan.Steps);
+                                ungrounded++;
+                                if (ungrounded >= 2)
+                                {
+                                    await FailAsync("Those controls are not on this screen, so I stopped.", ct);
+                                    return;
+                                }
+                                continue;
+                            }
+                            if (stuckLabel is { } stuck && grounded[0].Target?.Label is { } label &&
+                                GuideElementMatcher.SameLabel(label, stuck))
+                            {
+                                await FailAsync($"\"{label}\" did not change the screen, so I stopped.", ct);
                                 return;
                             }
+                            ungrounded = 0;
+                            rejected = Array.Empty<string>();
+                            stuckLabel = null;
+                            stuckFingerprint = null;
+                            ahead.AddRange(grounded);
                             break;
                     }
                 }
 
                 var step = ahead[0];
                 ahead.RemoveAt(0);
-                if (!fresh && !GuideElementMatcher.StillOnScreen(step, await _walker.SnapshotAsync()))
+                var visible = await _walker.SnapshotAsync();
+                if (!fresh && !GuideElementMatcher.StillOnScreen(step, visible))
                 {
                     ahead.Clear();
                     continue;
                 }
                 fresh = false;
+                var before = GuideElementMatcher.Fingerprint(visible);
 
                 SetPhase(new GuidePhase(GuidePhaseKind.Guiding, done.Count, done.Count + 1 + ahead.Count));
-                switch (await PerformAsync(step, ahead.FirstOrDefault(), ct))
+                switch (await PerformAsync(step, ct))
                 {
                     case Outcome.Completed:
+                        done.Add(step);
+                        actions++;
+                        misses = 0;
+                        if (ChangesTheScreen(step) && step.Target?.Label is { } used)
+                        {
+                            var after = await _walker.SnapshotAsync();
+                            if (GuideElementMatcher.Fingerprint(after) == before)
+                            {
+                                stuckLabel = used;
+                                stuckFingerprint = before;
+                                ahead.Clear();
+                            }
+                        }
+                        break;
+
                     case Outcome.Skipped:
                         done.Add(step);
                         actions++;
                         misses = 0;
+                        stuckLabel = null;
+                        stuckFingerprint = null;
                         break;
 
                     case Outcome.NotFound:
                         misses++;
                         missed = step;
                         ahead.Clear();
+                        stuckLabel = null;
+                        stuckFingerprint = null;
                         if (misses >= MaxMisses)
                         {
                             await FailAsync($"I cannot find \"{step.Target?.Label ?? step.Title}\" on screen.", ct);
@@ -184,7 +235,11 @@ public sealed class GuideSessionController
 
     // MARK: One step
 
-    private async Task<Outcome> PerformAsync(GuideStep step, GuideStep? next, CancellationToken ct)
+    /// <summary>Clicks, toggles, and opens are supposed to change the screen. Typing and reading often do not.</summary>
+    private static bool ChangesTheScreen(GuideStep step) =>
+        step.Action is GuideAction.Click or GuideAction.Toggle or GuideAction.Open;
+
+    private async Task<Outcome> PerformAsync(GuideStep step, CancellationToken ct)
     {
         var tag = TagFor(step);
         var events = Channel.CreateBounded<GuideStepEvent>(new BoundedChannelOptions(16)
@@ -242,8 +297,6 @@ public sealed class GuideSessionController
                         }
 
                         misses++;
-                        if (everFound && misses >= 2 && next?.Target is { } nextTarget && await LocateAsync(nextTarget) is not null)
-                            return Outcome.Completed;
                         // Typing and reading steps need no element to point at: keep the reminder by the pointer
                         // and wait for Return, rather than re-planning.
                         if (!everFound && misses >= 3 && step.Action is GuideAction.Type or GuideAction.Look)
@@ -251,7 +304,9 @@ public sealed class GuideSessionController
                             _cursor.Follow(tag);
                             return await WaitWithoutTargetAsync(step, events.Reader, ct);
                         }
-                        if (!everFound && misses >= MissingTicksBeforeReplan) return Outcome.NotFound;
+                        // Seen or not, a control that stays missing is a miss. Waiting forever is the loop;
+                        // marking the step done because some other label is visible shows an invented next step.
+                        if (misses >= MissingTicksBeforeReplan) return Outcome.NotFound;
                         if (everFound && misses >= 2)
                         {
                             frame = null;
@@ -296,7 +351,7 @@ public sealed class GuideSessionController
     private async Task<GuideRect?> LocateAsync(GuideTarget target)
     {
         var screen = await _walker.SnapshotAsync();
-        return GuideElementMatcher.Best(target, screen)?.Frame;
+        return GuideElementMatcher.Best(target, screen, allowFieldFallback: false)?.Frame;
     }
 
     private static async Task TickAsync(ChannelWriter<GuideStepEvent> writer, CancellationToken ct)

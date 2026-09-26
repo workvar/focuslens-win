@@ -10,7 +10,8 @@ public interface IGuidePlanner
     /// happened; <paramref name="missed"/> is set when the previous step's control was not on screen.
     /// </summary>
     Task<GuidePlan> PlanAsync(string request, IReadOnlyList<GuideStep> done, GuideStep? missed,
-        IReadOnlyList<GuideElement> screen, CancellationToken ct);
+        IReadOnlyList<GuideElement> screen, string? stuckLabel, IReadOnlyList<string>? rejectedLabels,
+        CancellationToken ct);
 }
 
 /// <summary>
@@ -34,18 +35,14 @@ public sealed class LlmGuidePlanner : IGuidePlanner
 
     private static string Os => "Windows " + Environment.OSVersion.Version;
 
-    private AiRequestOptions Options => new()
-    {
-        MaxTokens = 700,
-        Temperature = 0,
-        DisableThinking = true,
-        KeepAlive = "10m",
-        OllamaModel = _settings.PlannerModel,
-    };
+    /// <summary>Enough tokens for a few steps. Claude and OpenAI are used when that provider is selected.</summary>
+    private AiRequestOptions Options => _settings.ForRequest(_client.Provider, 700, 0);
 
     public async Task<GuidePlan> PlanAsync(string request, IReadOnlyList<GuideStep> done, GuideStep? missed,
-        IReadOnlyList<GuideElement> screen, CancellationToken ct) =>
-        await AskAsync(GuidePrompt.Plan(request, done, missed, screen, Os, await NotesAsync(request, ct)), ct);
+        IReadOnlyList<GuideElement> screen, string? stuckLabel, IReadOnlyList<string>? rejectedLabels,
+        CancellationToken ct) =>
+        await AskAsync(GuidePrompt.Plan(
+            request, done, missed, screen, Os, await NotesAsync(request, ct), stuckLabel, rejectedLabels), ct);
 
     /// <summary>
     /// Web hints, only when the user turned search on. Only the request and the OS name are sent, never

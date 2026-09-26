@@ -12,11 +12,18 @@ public sealed record AiRequestOptions
     public int? MaxTokens { get; init; }
     public double? Temperature { get; init; }
 
-    /// <summary>Asks reasoning models to answer directly (Ollama <c>think: false</c>).</summary>
+    /// <summary>
+    /// Asks reasoning models to answer directly. Ollama gets <c>think: false</c>. Anthropic gets
+    /// <c>thinking: {type: disabled}</c>. OpenAI reasoning models (gpt-5, o-series) get
+    /// <c>reasoning_effort: none</c>; gpt-4o does not, because that parameter is rejected there.
+    /// </summary>
     public bool DisableThinking { get; init; }
 
     /// <summary>How long Ollama keeps the model loaded after the request ("10m"). Null keeps the default.</summary>
     public string? KeepAlive { get; init; }
+
+    /// <summary>Claude or OpenAI model id for this request. Null keeps that provider's default.</summary>
+    public string? Model { get; init; }
 
     /// <summary>Ollama only: a different model for this request. Null uses the model from the AI tab.</summary>
     public string? OllamaModel { get; init; }

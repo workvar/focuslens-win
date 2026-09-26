@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using FocusLens.Core.Ai;
 using FocusLens.Core.Guide;
 
 namespace FocusLens.App.Views.Settings;
@@ -14,6 +15,7 @@ public partial class GuideSettingsPanel : UserControl
     {
         InitializeComponent();
         DataContextChanged += (_, _) => Load();
+        IsVisibleChanged += (_, _) => { if (IsVisible) ShowActiveProvider(); };
     }
 
     /// <summary>The panel's DataContext is the GuideSettings instance shared with the coordinator.</summary>
@@ -27,6 +29,9 @@ public partial class GuideSettingsPanel : UserControl
         Follow.Value = Math.Clamp(settings.FollowLevel, 1, 5);
         ShowTag.IsChecked = settings.ShowTag;
         Model.Text = settings.Model;
+        AnthropicModel.Text = settings.AnthropicModel;
+        OpenAiModel.Text = settings.OpenAiModel;
+        ShowActiveProvider();
         WebSearch.IsChecked = settings.WebSearch;
         SearxUrl.Text = settings.SearxUrl;
         FollowText.Text = FollowLabel(settings.FollowLevel);
@@ -84,11 +89,22 @@ public partial class GuideSettingsPanel : UserControl
         _settings.FollowLevel = (int)Follow.Value;
         _settings.ShowTag = ShowTag.IsChecked == true;
         _settings.Model = Model.Text;
+        _settings.AnthropicModel = AnthropicModel.Text.Trim();
+        _settings.OpenAiModel = OpenAiModel.Text.Trim();
         _settings.WebSearch = WebSearch.IsChecked == true;
         _settings.SearxUrl = SearxUrl.Text.Trim();
         _settings.HoldFill = HoldFill.IsChecked == true;
         _settings.HoldFillSeconds = HoldFillSeconds.Value;
         _settings.Save();   // the coordinator re-registers the shortcut on Changed
+    }
+
+    /// <summary>Shows the model field for the provider selected on the AI tab.</summary>
+    private void ShowActiveProvider()
+    {
+        var provider = AiSettings.Load().Provider;
+        OllamaModelRow.Visibility = provider == AiProviderKind.Ollama ? Visibility.Visible : Visibility.Collapsed;
+        AnthropicModelRow.Visibility = provider == AiProviderKind.Claude ? Visibility.Visible : Visibility.Collapsed;
+        OpenAiModelRow.Visibility = provider == AiProviderKind.OpenAi ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private static string SecondsLabel(double seconds) => $"{seconds:0.#} s";

@@ -18,14 +18,18 @@ public sealed class OpenAiStream : IChatStream
     {
         if (string.IsNullOrEmpty(_apiKey)) throw new AiException(AiErrorKind.MissingApiKey);
 
+        var model = ChatStreamHelpers.ChosenModel(options.Model, "gpt-4o-mini");
+        var reasoning = ChatStreamHelpers.IsReasoningModel(model);
         var body = new Dictionary<string, object>
         {
-            ["model"] = "gpt-4o-mini",
+            ["model"] = model,
             ["stream"] = true,
             ["messages"] = ChatStreamHelpers.ChatMessages(history, prompt),
         };
-        if (options.MaxTokens is { } maxTokens) body["max_tokens"] = maxTokens;
-        if (options.Temperature is { } temperature) body["temperature"] = temperature;
+        if (options.MaxTokens is { } maxTokens)
+            body[reasoning ? "max_completion_tokens" : "max_tokens"] = maxTokens;
+        if (options.Temperature is { } temperature && !reasoning) body["temperature"] = temperature;
+        if (options.DisableThinking && reasoning) body["reasoning_effort"] = "none";
 
         using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.openai.com/v1/chat/completions")
         {

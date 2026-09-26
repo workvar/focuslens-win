@@ -24,16 +24,78 @@ public static class GuideElementMatcher
     };
 
     /// <summary>
-    /// True when this step can still be done on the screen in front of the user. A step with no target
-    /// stays. A named target must still be visible, and a different text field does not count.
+    /// True when this step's label is still an exact control on screen. A step with no label is not
+    /// kept: that is how an invented "look" step stays forever.
     /// </summary>
     public static bool StillOnScreen(GuideStep step, IReadOnlyList<GuideElement> screen)
     {
-        if (step.Target is not { } target) return true;
+        if (step.Target is not { } target) return false;
         return Best(target, screen, allowFieldFallback: false) is not null;
     }
 
-    public static GuideElement? Best(GuideTarget target, IEnumerable<GuideElement> elements, bool allowFieldFallback = true)
+    /// <summary>
+    /// The leading steps whose labels are copied from this screen, in order. Stops at the first label
+    /// that is not listed, and keeps each control once. The label is rewritten to the element's own
+    /// text so a later lookup cannot drift onto a different control that merely contains the same word.
+    /// </summary>
+    public static IReadOnlyList<GuideStep> Grounded(IReadOnlyList<GuideStep> steps, IReadOnlyList<GuideElement> screen)
+    {
+        var kept = new List<GuideStep>();
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var step in steps)
+        {
+            if (step.Target is not { } target) break;
+            var element = Exact(target, screen);
+            if (element is null) break;
+            var key = Normalise(element.Label);
+            if (!seen.Add(key)) continue;
+            kept.Add(step with { Target = target with { Label = element.Label } });
+        }
+        return kept;
+    }
+
+    /// <summary>Labels from a plan that could not be grounded, for the next prompt.</summary>
+    public static IReadOnlyList<string> InventedLabels(IReadOnlyList<GuideStep> steps)
+    {
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        var labels = new List<string>();
+        foreach (var step in steps)
+        {
+            var raw = step.Target?.Label.Trim() ?? "";
+            var label = raw.Length == 0 ? step.Title : raw;
+            var key = Normalise(label);
+            if (key.Length == 0 || !seen.Add(key)) continue;
+            labels.Add(label);
+            if (labels.Count == 6) break;
+        }
+        return labels;
+    }
+
+    public static bool SameLabel(string a, string b)
+    {
+        var left = Normalise(a);
+        return left.Length > 0 && left == Normalise(b);
+    }
+
+    /// <summary>
+    /// Interactive controls only, so a clock or other static text cannot hide the fact that a click
+    /// did nothing.
+    /// </summary>
+    public static string Fingerprint(IReadOnlyList<GuideElement> elements)
+    {
+        var keys = new List<string>();
+        foreach (var element in elements)
+        {
+            if (string.Equals(element.Role, "Text", StringComparison.OrdinalIgnoreCase)) continue;
+            var label = Normalise(element.Label);
+            if (label.Length == 0) continue;
+            keys.Add($"{element.AppName}|{element.Window}|{element.Role}|{label}|{element.State}");
+        }
+        keys.Sort(StringComparer.Ordinal);
+        return string.Join("\n", keys);
+    }
+
+    public static GuideElement? Best(GuideTarget target, IEnumerable<GuideElement> elements, bool allowFieldFallback = false)
     {
         GuideElement? best = null;
         var bestScore = 0;
@@ -51,9 +113,33 @@ public static class GuideElementMatcher
     }
 
     /// <summary>
-    /// A field is often named only by a placeholder that UI Automation does not report. When the target is a
-    /// field and no text matched, use the field nearest the top of the screen, where address and search bars
-    /// live. Better a plausible field than a guide that stalls.
+    /// Exact label only. A shared prefix or a contained word is a different control, and pointing at it
+    /// is how an invented step gets a cursor.
+    /// </summary>
+    private static GuideElement? Exact(GuideTarget target, IEnumerable<GuideElement> elements)
+    {
+        var wanted = Normalise(target.Label);
+        if (wanted.Length == 0) return null;
+        GuideElement? best = null;
+        var bestScore = int.MinValue;
+        foreach (var element in elements)
+        {
+            if (Normalise(element.Label) != wanted) continue;
+            var score = 100;
+            if (target.Role is { } role && RoleGroups.TryGetValue(role, out var group))
+                score += group.Contains(element.Role, StringComparer.OrdinalIgnoreCase) ? 15 : -10;
+            if (best is null || score > bestScore || (score == bestScore && element.Frame.Area < best.Frame.Area))
+            {
+                best = element;
+                bestScore = score;
+            }
+        }
+        return best;
+    }
+
+    /// <summary>
+    /// A field is often named only by a placeholder that UI Automation does not report. Used only when a
+    /// caller explicitly allows it. Guide pointing does not: an unnamed field would be a guess.
     /// </summary>
     private static GuideElement? FieldFallback(GuideTarget target, IEnumerable<GuideElement> elements)
     {
@@ -68,11 +154,8 @@ public static class GuideElementMatcher
         var found = Normalise(element.Label);
         if (wanted.Length == 0 || found.Length == 0) return 0;
 
-        int score;
-        if (found == wanted) score = 100;
-        else if (found.StartsWith(wanted, StringComparison.Ordinal) || wanted.StartsWith(found, StringComparison.Ordinal)) score = 75;
-        else if (found.Contains(wanted, StringComparison.Ordinal)) score = 55;
-        else return 0;
+        if (found != wanted) return 0;
+        var score = 100;
 
         if (target.Role is { } role && RoleGroups.TryGetValue(role, out var group))
             score += group.Contains(element.Role, StringComparer.OrdinalIgnoreCase) ? 15 : -10;

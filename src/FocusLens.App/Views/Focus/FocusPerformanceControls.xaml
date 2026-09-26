@@ -24,13 +24,25 @@
 
         <StackPanel Visibility="{Binding ShowsModel, ElementName=Root, Converter={StaticResource BoolToVisibility}}">
             <TextBlock Text="Model for focus checks" Margin="0,14,0,4" />
-            <Grid>
-                <TextBox Text="{Binding Model, UpdateSourceTrigger=LostFocus}" AutomationProperties.Name="Model for focus checks" />
-                <TextBlock Text="Same as the AI tab" Style="{StaticResource Muted}" Margin="14,0,0,0" VerticalAlignment="Center"
-                           IsHitTestVisible="False" Visibility="{Binding Model, Converter={StaticResource InvertedNullToVisibility}}" />
-            </Grid>
-            <TextBlock Style="{StaticResource FocusCaption}"
-                       Text="Ollama only. A small model such as llama3.2:1b or qwen2.5:0.5b answers faster and uses far less GPU. Pull it first with ollama pull. Leave empty to use the AI tab's model." />
+            <StackPanel Visibility="{Binding IsOllamaModel, Converter={StaticResource BoolToVisibility}}">
+                <Grid>
+                    <TextBox Text="{Binding Model, UpdateSourceTrigger=LostFocus}" AutomationProperties.Name="Ollama model for focus checks" />
+                    <TextBlock Text="Same as the AI tab" Style="{StaticResource Muted}" Margin="14,0,0,0" VerticalAlignment="Center"
+                               IsHitTestVisible="False" Visibility="{Binding Model, Converter={StaticResource InvertedNullToVisibility}}" />
+                </Grid>
+                <TextBlock Style="{StaticResource FocusCaption}"
+                           Text="Used while Ollama is the provider on the AI tab. A small model such as llama3.2:1b or qwen2.5:0.5b answers faster and uses far less GPU. Pull it first with ollama pull. Leave empty to use the AI tab's model." />
+            </StackPanel>
+            <StackPanel Visibility="{Binding IsAnthropicModel, Converter={StaticResource BoolToVisibility}}">
+                <TextBox Text="{Binding AnthropicModel, UpdateSourceTrigger=LostFocus}" AutomationProperties.Name="Anthropic model for focus checks" />
+                <TextBlock Style="{StaticResource FocusCaption}"
+                           Text="Used while Anthropic is the provider on the AI tab. Leave empty for Claude Sonnet." />
+            </StackPanel>
+            <StackPanel Visibility="{Binding IsOpenAiModel, Converter={StaticResource BoolToVisibility}}">
+                <TextBox Text="{Binding OpenAiModel, UpdateSourceTrigger=LostFocus}" AutomationProperties.Name="OpenAI model for focus checks" />
+                <TextBlock Style="{StaticResource FocusCaption}"
+                           Text="Used while OpenAI is the provider on the AI tab. Leave empty for gpt-4o-mini." />
+            </StackPanel>
         </StackPanel>
     </StackPanel>
 </UserControl>

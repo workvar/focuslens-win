@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using FocusLens.App.ViewModels.Focus;
 
 namespace FocusLens.App.Views.Focus;
 
@@ -9,7 +10,15 @@ public partial class FocusPerformanceControls : UserControl
     public static readonly DependencyProperty ShowsModelProperty =
         DependencyProperty.Register(nameof(ShowsModel), typeof(bool), typeof(FocusPerformanceControls), new PropertyMetadata(true));
 
-    public FocusPerformanceControls() => InitializeComponent();
+    public FocusPerformanceControls()
+    {
+        InitializeComponent();
+        DataContextChanged += (_, _) => (DataContext as FocusSettingsViewModel)?.RefreshProvider();
+        IsVisibleChanged += (_, _) =>
+        {
+            if (IsVisible) (DataContext as FocusSettingsViewModel)?.RefreshProvider();
+        };
+    }
 
     public bool ShowsModel
     {

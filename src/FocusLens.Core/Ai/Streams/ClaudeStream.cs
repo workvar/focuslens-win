@@ -19,12 +19,15 @@ public sealed class ClaudeStream : IChatStream
 
         var body = new Dictionary<string, object>
         {
-            ["model"] = "claude-sonnet-4-6",
+            ["model"] = ChatStreamHelpers.ChosenModel(options.Model, "claude-sonnet-4-6"),
             ["max_tokens"] = options.MaxTokens ?? 1024,
             ["stream"] = true,
             ["messages"] = ChatStreamHelpers.ChatMessages(history, prompt),
         };
         if (options.Temperature is { } temperature) body["temperature"] = temperature;
+        // Off by default on Sonnet 4.6, and required to keep later models from spending a short
+        // max_tokens budget on hidden reasoning.
+        if (options.DisableThinking) body["thinking"] = new Dictionary<string, object> { ["type"] = "disabled" };
 
         using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.anthropic.com/v1/messages")
         {

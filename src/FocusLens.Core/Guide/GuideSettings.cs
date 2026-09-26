@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using FocusLens.Core.Ai;
 using FocusLens.Core.Paths;
 using FocusLens.Core.Storage;
 
@@ -23,7 +24,14 @@ public sealed class GuideSettings
     /// <summary>1 is a lazy trail, 5 is nearly glued to the pointer.</summary>
     public int FollowLevel { get; set; } = 3;
     public bool ShowTag { get; set; } = true;
+    /// <summary>Optional Ollama model. Empty uses the model from the AI tab. Used only while Ollama is the provider.</summary>
     public string Model { get; set; } = "";
+
+    /// <summary>Optional Claude model id. Empty uses Claude Sonnet. Used only while Anthropic is the provider.</summary>
+    public string AnthropicModel { get; set; } = "";
+
+    /// <summary>Optional OpenAI model id. Empty uses gpt-4o-mini. Used only while OpenAI is the provider.</summary>
+    public string OpenAiModel { get; set; } = "";
 
     /// <summary>Off by default: the request text leaves the PC when a search runs.</summary>
     public bool WebSearch { get; set; }
@@ -44,7 +52,34 @@ public sealed class GuideSettings
     [JsonIgnore] public TimeSpan HoldFillDuration => TimeSpan.FromSeconds(Math.Clamp(HoldFillSeconds, HoldFillMin, HoldFillMax));
 
     [JsonIgnore] public double FollowRate => 4.0 + Math.Clamp(FollowLevel, 1, 5) * 3.0;
-    [JsonIgnore] public string? PlannerModel => string.IsNullOrWhiteSpace(Model) ? null : Model.Trim();
+    [JsonIgnore] public string? PlannerModel => Blank(Model);
+
+    /// <summary>
+    /// A short planning or hold-to-fill request. The model override is the one stored for the provider
+    /// that is actually enabled, so an Ollama name is never sent to Claude or OpenAI.
+    /// </summary>
+    public AiRequestOptions ForRequest(AiProvider provider, int maxTokens, double temperature)
+    {
+        var options = new AiRequestOptions
+        {
+            MaxTokens = maxTokens,
+            Temperature = temperature,
+            DisableThinking = true,
+            KeepAlive = "10m",
+        };
+        return provider switch
+        {
+            AiProvider.Claude => options with { Model = Blank(AnthropicModel) },
+            AiProvider.OpenAi => options with { Model = Blank(OpenAiModel) },
+            _ => options with { OllamaModel = PlannerModel },
+        };
+    }
+
+    private static string? Blank(string? value)
+    {
+        var trimmed = value?.Trim() ?? "";
+        return trimmed.Length == 0 ? null : trimmed;
+    }
 
     public static GuideSettings Load() => JsonFile.Load(AppPaths.GuideSettingsFile, () => new GuideSettings());
 

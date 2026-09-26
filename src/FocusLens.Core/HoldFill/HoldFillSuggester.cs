@@ -32,14 +32,7 @@ public sealed class LlmHoldFillSuggester : IHoldFillSuggester
         _settings = settings;
     }
 
-    private AiRequestOptions Options => new()
-    {
-        MaxTokens = 24,
-        Temperature = 0.2,
-        DisableThinking = true,
-        KeepAlive = "10m",
-        OllamaModel = _settings.PlannerModel,
-    };
+    private AiRequestOptions Options => _settings.ForRequest(_client.Provider, 24, 0.2);
 
     public async Task<string?> SuggestAsync(SearchField field, HoldFillContext context, CancellationToken ct)
     {

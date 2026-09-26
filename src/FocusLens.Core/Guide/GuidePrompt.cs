@@ -16,12 +16,14 @@ public static class GuidePrompt
     public const int MaxPlannedSteps = 3;
 
     public static string Plan(string request, IReadOnlyList<GuideStep> done, GuideStep? missed,
-        IReadOnlyList<GuideElement> screen, string os, IReadOnlyList<GuideSearchResult>? notes = null)
+        IReadOnlyList<GuideElement> screen, string os, IReadOnlyList<GuideSearchResult>? notes = null,
+        string? stuckLabel = null, IReadOnlyList<string>? rejectedLabels = null)
     {
-        var finished = done.Count == 0 ? "- nothing yet" : string.Join("\n", done.Select(s => $"- {s.Title}"));
-        var miss = missed is null
-            ? ""
-            : $"The step \"{missed.Title}\" (\"{missed.Target?.Label ?? missed.Title}\") was not on screen. Use a different control from the list below.\n";
+        var finished = done.Count == 0
+            ? "- nothing yet"
+            : string.Join("\n", done.Select(s =>
+                s.Target?.Label is { Length: > 0 } label ? $"- {s.Title} (control: {label})" : $"- {s.Title}"));
+        var advice = Advisories(missed, stuckLabel, rejectedLabels);
         return $$"""
         You are guiding one person through one task on their computer ({{os}}). They asked: "{{request}}"
 
@@ -36,7 +38,8 @@ public static class GuidePrompt
         Each step:
         - "title" names the control's exact visible words and the result ("Turn Bluetooth on", "Choose AirPods"). At most ten words. Never a generic "Open Settings" when that window is already in front.
         - "detail" is one sentence about what is on screen that makes this the right next action, or what they will see after it.
-        - "label" is copied from the screen list. Never invent a button, menu, or app that is not listed. The only new text allowed is "text" on a type step, and only for words they asked to enter.
+        - "label" is copied exactly from one line of the screen list, including its spelling. If no listed control can do the task, status is "blocked". Never invent a button, menu, or app. The only new text allowed is "text" on a type step, and only for words they asked to enter.
+        - Use a control from the first App. Choose another app only when the task is to switch to it.
         - "action" is click, toggle, type, open, or look. "role" is button, checkbox, switch, menu, menuitem, tab, row, field, or link.
         - For a type step, "label" is the field (such as "Address") and "text" is what to type. Never put the typed words in "label".
         - One physical action per step. Plan a menu item only when that item is listed now; otherwise plan only opening the menu.
@@ -48,10 +51,34 @@ public static class GuidePrompt
 
         Already done:
         {{finished}}
-        {{miss}}
+        {{advice}}
         On screen now (the first app is the one in front):
         {{ScreenSummary(screen)}}{{WebNotes(notes)}}
         """;
+    }
+
+    /// <summary>
+    /// What the model must not try again: a missing control, labels it invented, or a control that was
+    /// used and left the screen the same.
+    /// </summary>
+    private static string Advisories(GuideStep? missed, string? stuckLabel, IReadOnlyList<string>? rejectedLabels)
+    {
+        var lines = new StringBuilder();
+        if (missed is not null)
+        {
+            var label = missed.Target?.Label ?? missed.Title;
+            lines.Append("The step \"").Append(missed.Title).Append("\" (\"").Append(label)
+                .AppendLine("\") was not on screen. Use a different control from the list below.");
+        }
+        if (rejectedLabels is { Count: > 0 })
+        {
+            var list = string.Join(", ", rejectedLabels.Take(6).Select(l => $"\"{l}\""));
+            lines.Append("These labels are not on the screen list. Do not use them: ").Append(list)
+                .AppendLine(". Copy a label from the list, or use status \"blocked\".");
+        }
+        if (!string.IsNullOrWhiteSpace(stuckLabel))
+            lines.Append("The control \"").Append(stuckLabel).AppendLine("\" was used and the screen did not change. Do not choose it again.");
+        return lines.Length == 0 ? "" : lines.ToString();
     }
 
     /// <summary>
